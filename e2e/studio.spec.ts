@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { decodePng, downloadVia, expectScanState, pickKind, previewPng } from "./helpers";
+import { decodePng, downloadVia, expectScanState, pickKind, previewPng, stubSiteLogos } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
+  // No real favicon lookups: the site-logo feature has its own tests below.
+  await stubSiteLogos(page);
   await page.goto("/");
 });
 
@@ -157,7 +159,7 @@ test("a logo raises error correction and still scans", async ({ page }) => {
     '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="12" fill="#ff2d55"/></svg>',
   );
   await page.getByTestId("logo-input").setInputFiles({ name: "logo.svg", mimeType: "image/svg+xml", buffer: logo });
-  await expect(page.getByAltText("Uploaded logo")).toBeVisible();
+  await expect(page.getByAltText("Current logo")).toBeVisible();
   await expect(page.getByText(/level H/)).toBeVisible();
   await expectScanState(page, "good");
   const file = decodePng((await downloadVia(page, /Download PNG/)).buffer);

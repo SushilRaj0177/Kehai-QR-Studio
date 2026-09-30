@@ -9,6 +9,7 @@ import { useQrRenderer } from "./hooks/useQrRenderer";
 import { useScanCheck } from "./hooks/useScanCheck";
 import { useTheme } from "./hooks/useTheme";
 import { useRecent } from "./hooks/useRecent";
+import { useSiteLogo } from "./hooks/useSiteLogo";
 import { DEFAULT_DESIGN, PRESETS, applyPreset, matchingPreset, type QrDesign } from "./lib/design";
 import { DEFAULT_FIELDS, KINDS, describe, encode, validate, type AllFields, type QrKind } from "./lib/qrTypes";
 import { analyze } from "./lib/readability";
@@ -74,15 +75,30 @@ export default function App() {
     if (preset) setDesign((d) => applyPreset(d, preset));
   }, []);
 
+  const onSiteLogoFound = useCallback(
+    (domain: string, raised: boolean) =>
+      notify({
+        tone: "info",
+        text: `Added ${domain}'s logo${raised ? " and raised error correction to High" : ""} — remove or replace it under Logo.`,
+      }),
+    [notify],
+  );
+  const siteLogo = useSiteLogo({ kind, payload, design, setDesign, onFound: onSiteLogoFound });
+
+  /** Upload (src) or remove (null) the centre logo. */
   const onLogo = useCallback(
     (src: string | null) => {
-      setDesign((d) => {
-        const raise = !!src && !d.logo.src && (d.errorLevel === "L" || d.errorLevel === "M");
-        if (raise) notify({ tone: "info", text: "Error correction raised to High to make room for the logo." });
-        return { ...d, errorLevel: raise ? "H" : d.errorLevel, logo: { ...d.logo, src } };
-      });
+      const d = design;
+      if (!src && d.logo.origin === "site" && d.logo.siteDomain) siteLogo.dismiss(d.logo.siteDomain);
+      const raise = !!src && !d.logo.src && (d.errorLevel === "L" || d.errorLevel === "M");
+      if (raise) notify({ tone: "info", text: "Error correction raised to High to make room for the logo." });
+      setDesign((cur) => ({
+        ...cur,
+        errorLevel: raise ? "H" : cur.errorLevel,
+        logo: { ...cur.logo, src, origin: src ? "upload" : null, siteDomain: null },
+      }));
     },
-    [notify],
+    [design, notify, siteLogo],
   );
 
   const remember = useCallback(
@@ -254,7 +270,17 @@ export default function App() {
               Reset
             </button>
           </div>
-          <DesignPanel design={design} activePreset={activePreset} onChange={onDesign} onPreset={onPreset} onLogo={onLogo} />
+          <DesignPanel
+            design={design}
+            activePreset={activePreset}
+            onChange={onDesign}
+            onPreset={onPreset}
+            onLogo={onLogo}
+            siteLogo={siteLogo.status}
+            autoLogo={siteLogo.enabled}
+            onAutoLogo={siteLogo.setEnabled}
+            onRestoreSiteLogo={siteLogo.restore}
+          />
         </section>
 
         <div className="layout__recent">
@@ -264,7 +290,8 @@ export default function App() {
 
       <footer className="footer">
         <p>
-          <strong>Private by design.</strong> Nothing you type or upload leaves this page — there is no server.
+          <strong>Private by design.</strong> There is no server: what you type and upload stays on this page. The only outside
+          request is optional — a link's domain name is sent to a public favicon service to fetch its logo.
         </p>
         <p className="footer__links">
           Part of the <a href={KEHAI_URL} target="_blank" rel="noopener">Kehai</a> ecosystem ·{" "}

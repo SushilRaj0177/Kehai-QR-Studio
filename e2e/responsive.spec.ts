@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { decodePng, downloadVia, expectScanState } from "./helpers";
+import { decodePng, downloadVia, expectScanState, stubSiteLogos } from "./helpers";
 
 // Runs in the "mobile" project (Pixel 7 viewport, touch).
+
+test.beforeEach(async ({ page }) => {
+  await stubSiteLogos(page);
+});
 
 test("works on a phone: no sideways scrolling, preview right under the form", async ({ page }) => {
   await page.goto("/");

@@ -28,6 +28,10 @@ export interface LogoSetting {
   size: number;
   /** Clear the modules behind the logo so it sits on a clean patch. */
   hideDots: boolean;
+  /** Where the logo came from: uploaded by the user, or auto-detected from the URL's website. */
+  origin: "upload" | "site" | null;
+  /** For site logos: the domain it belongs to (e.g. "gdg.community.dev"). */
+  siteDomain: string | null;
 }
 
 export interface QrDesign {
@@ -60,7 +64,7 @@ export const DEFAULT_DESIGN: QrDesign = {
   dotStyle: "square",
   cornerStyle: "square",
   cornerDotStyle: "square",
-  logo: { src: null, size: 0.25, hideDots: true },
+  logo: { src: null, size: 0.25, hideDots: true, origin: null, siteDomain: null },
 };
 
 export const ERROR_LEVELS: { id: ErrorLevel; label: string; recovers: string }[] = [

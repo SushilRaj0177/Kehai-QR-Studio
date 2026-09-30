@@ -783,6 +783,47 @@ input[type="range"] {
   align-items: center;
   gap: 10px;
 }
+.logo-row__meta {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+.logo-row__title {
+  font-weight: 600;
+  font-size: 14px;
+}
+.logo-row__actions {
+  display: flex;
+  gap: 6px;
+}
+.site-logo-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.site-logo-line__spinner {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--kehai);
+  animation: spin 0.9s linear infinite;
+}
+.link-inline {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cyan-text);
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .logo-row__thumb {
   width: 48px;
   height: 48px;

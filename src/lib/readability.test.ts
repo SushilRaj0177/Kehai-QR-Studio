@@ -62,7 +62,7 @@ describe("analyze()", () => {
   });
 
   it("weighs logo size against error correction", () => {
-    const logo = (size: number) => ({ src: "data:image/png;base64,AAAA", size, hideDots: true });
+    const logo = (size: number) => ({ src: "data:image/png;base64,AAAA", size, hideDots: true, origin: "upload" as const, siteDomain: null });
     expect(ids(design({ errorLevel: "M", logo: logo(0.4) }))).toContain("logo:error");
     expect(ids(design({ errorLevel: "H", logo: logo(0.4) }))).toContain("logo:warn");
     expect(ids(design({ errorLevel: "H", logo: logo(0.2) }))).not.toContain("logo:warn");

@@ -10,6 +10,7 @@ import {
   SIZE_MIN,
   type QrDesign,
 } from "../lib/design";
+import type { SiteLogoStatus } from "../hooks/useSiteLogo";
 import { ColorInput } from "./ColorInput";
 import { Icon } from "./icons";
 
@@ -19,6 +20,10 @@ interface Props {
   onChange: (patch: Partial<QrDesign>) => void;
   onPreset: (id: string) => void;
   onLogo: (src: string | null) => void;
+  siteLogo: SiteLogoStatus;
+  autoLogo: boolean;
+  onAutoLogo: (on: boolean) => void;
+  onRestoreSiteLogo: (domain: string) => void;
 }
 
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
@@ -33,6 +38,36 @@ function Section({ title, children, aside }: { title: string; children: ReactNod
       {children}
     </section>
   );
+}
+
+function SiteLogoLine({ status, hasLogo, onRestore }: { status: SiteLogoStatus; hasLogo: boolean; onRestore: (d: string) => void }) {
+  const { state, domain } = status;
+  if (!domain) return null;
+  if (state === "loading") {
+    return (
+      <p className="site-logo-line" role="status" data-testid="site-logo-status">
+        <span className="site-logo-line__spinner" aria-hidden /> Looking for {domain}'s logo…
+      </p>
+    );
+  }
+  if (state === "none" && !hasLogo) {
+    return (
+      <p className="site-logo-line muted" role="status" data-testid="site-logo-status">
+        No usable logo found for {domain} — add your own above.
+      </p>
+    );
+  }
+  if (state === "dismissed") {
+    return (
+      <p className="site-logo-line muted" data-testid="site-logo-status">
+        {domain}'s logo removed.{" "}
+        <button type="button" className="link-inline" onClick={() => onRestore(domain)}>
+          Use it again
+        </button>
+      </p>
+    );
+  }
+  return null;
 }
 
 function Slider(props: { id: string; label: string; value: number; min: number; max: number; step: number; unit: string; onChange: (v: number) => void }) {
@@ -77,7 +112,7 @@ function Chips<T extends string>({ label, options, value, onChange }: { label: s
   );
 }
 
-export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo }: Props) {
+export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, siteLogo, autoLogo, onAutoLogo, onRestoreSiteLogo }: Props) {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [logoError, setLogoError] = useState<string | null>(null);
 
@@ -262,13 +297,23 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo }
         />
         {design.logo.src ? (
           <div className="logo-row">
-            <img src={design.logo.src} alt="Uploaded logo" className="logo-row__thumb" />
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()}>
-              Replace
-            </button>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => onLogo(null)}>
-              Remove
-            </button>
+            <img src={design.logo.src} alt="Current logo" className="logo-row__thumb" />
+            <div className="logo-row__meta">
+              <span className="logo-row__title">{design.logo.origin === "site" ? "Website logo" : "Your logo"}</span>
+              {design.logo.origin === "site" && design.logo.siteDomain && (
+                <span className="muted small" data-testid="logo-source">
+                  Found for {design.logo.siteDomain}
+                </span>
+              )}
+            </div>
+            <div className="logo-row__actions">
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()}>
+                Replace
+              </button>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => onLogo(null)}>
+                Remove
+              </button>
+            </div>
           </div>
         ) : (
           <button type="button" className="dropzone" onClick={() => fileRef.current?.click()}>
@@ -277,6 +322,11 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo }
             <span className="muted small">PNG, JPG, SVG · under 2 MB</span>
           </button>
         )}
+        <SiteLogoLine status={siteLogo} hasLogo={!!design.logo.src} onRestore={onRestoreSiteLogo} />
+        <label className="check">
+          <input type="checkbox" checked={autoLogo} onChange={(e) => onAutoLogo(e.target.checked)} />
+          <span>Use the website's logo for links automatically</span>
+        </label>
         {logoError && (
           <p className="field__error" role="alert">
             {logoError}
