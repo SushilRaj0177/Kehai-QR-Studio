@@ -1,5 +1,4 @@
-import qrcode from "qrcode-generator";
-import { toUtf8ByteString, type ErrorLevel, type QrDesign } from "./design";
+import { marginPx, moduleCount, type ErrorLevel, type QrDesign } from "./design";
 
 /**
  * Static readability analysis: rules of thumb that predict whether real
@@ -70,19 +69,12 @@ export const RECOVERY: Record<ErrorLevel, number> = { L: 0.07, M: 0.15, Q: 0.25,
  * too large to fit in any QR version at this error-correction level.
  */
 export function geometry(data: string, design: QrDesign): Geometry | null {
-  let modules: number;
-  try {
-    const qr = qrcode(0, design.errorLevel);
-    qr.addData(toUtf8ByteString(data), "Byte");
-    qr.make();
-    modules = qr.getModuleCount();
-  } catch {
-    return null;
-  }
-  const drawable = design.size - design.margin * 2;
+  const modules = moduleCount(data, design.errorLevel);
+  if (!modules) return null;
+  const margin = marginPx(design, modules);
   // The renderer rounds modules down to whole pixels and centres the grid,
   // so the leftover pixels become extra quiet zone on each side.
-  const modulePx = Math.floor(drawable / modules);
+  const modulePx = Math.floor((design.size - margin * 2) / modules);
   const quietPx = (design.size - modules * modulePx) / 2;
   return {
     modules,

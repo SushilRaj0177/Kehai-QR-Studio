@@ -19,7 +19,9 @@ describe("geometry", () => {
     const g = geometry(url, DEFAULT_DESIGN)!;
     expect(g.modules).toBe(29); // version 3 at level M
     expect(g.version).toBe(3);
-    expect(g.modulePx).toBe(Math.floor((320 - 32) / 29));
+    // 4-module quiet zone: 320 / (29 + 8) ≈ 8.6px per module.
+    expect(g.modulePx).toBe(8);
+    expect(g.quietZoneModules).toBeGreaterThanOrEqual(3.9);
   });
 
   it("returns null when the payload can't fit", () => {
@@ -51,11 +53,12 @@ describe("analyze()", () => {
 
   it("flags a missing or tight quiet zone", () => {
     expect(ids(design({ margin: 0 }))).toContain("quiet-zone:error");
-    expect(ids(design({ margin: 12 }))).toContain("quiet-zone:warn");
+    expect(ids(design({ margin: 1 }))).toContain("quiet-zone:warn");
+    expect(ids(design({ margin: 4, size: 1024 }))).not.toContain("quiet-zone:warn");
   });
 
   it("flags tiny modules", () => {
-    expect(ids(design({ size: 128, margin: 8 }), "x".repeat(300))).toContain("module-size:error");
+    expect(ids(design({ size: 128, margin: 1 }), "x".repeat(300))).toContain("module-size:error");
   });
 
   it("weighs logo size against error correction", () => {

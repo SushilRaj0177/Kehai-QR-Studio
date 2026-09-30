@@ -1,4 +1,5 @@
 import type { Options } from "qr-code-styling";
+import qrcode from "qrcode-generator";
 
 /**
  * The visual design of a QR code, independent of what it encodes. This is
@@ -32,7 +33,8 @@ export interface LogoSetting {
 export interface QrDesign {
   /** Output width/height in pixels (square). */
   size: number;
-  /** Quiet zone around the code, in pixels. */
+  /** Quiet zone around the code, in modules (the QR spec asks for 4).
+   * Measured in modules rather than pixels so it stays correct at any size. */
   margin: number;
   foreground: string;
   background: string;
@@ -46,11 +48,11 @@ export interface QrDesign {
 
 export const SIZE_MIN = 128;
 export const SIZE_MAX = 1024;
-export const MARGIN_MAX = 80;
+export const MARGIN_MAX = 10;
 
 export const DEFAULT_DESIGN: QrDesign = {
   size: 320,
-  margin: 16,
+  margin: 4,
   foreground: "#0a0e14",
   background: "#ffffff",
   gradient: { enabled: false, type: "linear", color: "#ff2d55", rotation: 45 },
@@ -104,7 +106,7 @@ export const PRESETS: Preset[] = [
     name: "Classic",
     note: "Black on white. Scans anywhere.",
     design: {
-      margin: 16,
+      margin: 4,
       foreground: "#0a0e14",
       background: "#ffffff",
       gradient: { enabled: false, type: "linear", color: "#0a0e14", rotation: 0 },
@@ -119,7 +121,7 @@ export const PRESETS: Preset[] = [
     name: "Torii",
     note: "Kehai vermilion gradient.",
     design: {
-      margin: 18,
+      margin: 3,
       foreground: "#c8102e",
       background: "#fffaf5",
       gradient: { enabled: true, type: "linear", color: "#5c0a1c", rotation: 135 },
@@ -134,7 +136,7 @@ export const PRESETS: Preset[] = [
     name: "Kehai Cyan",
     note: "Deep teal, soft modules.",
     design: {
-      margin: 18,
+      margin: 3,
       foreground: "#0b4f5c",
       background: "#f2fdff",
       gradient: { enabled: true, type: "radial", color: "#032a33", rotation: 0 },
@@ -149,7 +151,7 @@ export const PRESETS: Preset[] = [
     name: "Print-safe",
     note: "High recovery, wide quiet zone.",
     design: {
-      margin: 32,
+      margin: 6,
       foreground: "#000000",
       background: "#ffffff",
       gradient: { enabled: false, type: "linear", color: "#000000", rotation: 0 },
@@ -164,7 +166,7 @@ export const PRESETS: Preset[] = [
     name: "Sakura",
     note: "Plum on blossom pink.",
     design: {
-      margin: 18,
+      margin: 3,
       foreground: "#831843",
       background: "#fff1f5",
       gradient: { enabled: false, type: "linear", color: "#831843", rotation: 0 },
@@ -179,7 +181,7 @@ export const PRESETS: Preset[] = [
     name: "Sumi Ink",
     note: "Charcoal dots on paper.",
     design: {
-      margin: 20,
+      margin: 3,
       foreground: "#1c1917",
       background: "#f5f1e8",
       gradient: { enabled: false, type: "linear", color: "#1c1917", rotation: 0 },
@@ -230,6 +232,28 @@ export function toUtf8ByteString(value: string): string {
   return out;
 }
 
+/** Modules per side for this payload (auto version, byte mode), or null if it can't fit. */
+export function moduleCount(data: string, errorLevel: ErrorLevel): number | null {
+  try {
+    const qr = qrcode(0, errorLevel);
+    qr.addData(toUtf8ByteString(data), "Byte");
+    qr.make();
+    return qr.getModuleCount();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Converts the quiet zone from modules to the pixel margin the renderer
+ * expects: with N modules and m quiet-zone modules on each side, a module
+ * is size / (N + 2m) pixels wide.
+ */
+export function marginPx(design: QrDesign, modules: number | null): number {
+  if (!modules || design.margin <= 0) return 0;
+  return Math.round((design.margin * design.size) / (modules + 2 * design.margin));
+}
+
 /** Translate a design + payload into qr-code-styling options. */
 export function toStylingOptions(design: QrDesign, data: string): Options {
   const fg = design.foreground;
@@ -248,7 +272,7 @@ export function toStylingOptions(design: QrDesign, data: string): Options {
     type: "canvas",
     width: design.size,
     height: design.size,
-    margin: design.margin,
+    margin: marginPx(design, moduleCount(data, design.errorLevel)),
     data: toUtf8ByteString(data),
     image: design.logo.src ?? undefined,
     qrOptions: { typeNumber: 0, mode: "Byte", errorCorrectionLevel: design.errorLevel },

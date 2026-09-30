@@ -133,7 +133,17 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo }
 
       <Section title="Size & margin">
         <Slider id="size" label="Size" value={design.size} min={SIZE_MIN} max={SIZE_MAX} step={8} unit="px" onChange={(size) => onChange({ size })} />
-        <Slider id="margin" label="Margin" value={design.margin} min={0} max={MARGIN_MAX} step={1} unit="px" onChange={(margin) => onChange({ margin })} />
+        <Slider
+          id="margin"
+          label="Margin"
+          value={design.margin}
+          min={0}
+          max={MARGIN_MAX}
+          step={1}
+          unit=" modules"
+          onChange={(margin) => onChange({ margin })}
+        />
+        <p className="muted small">The quiet zone scanners need around the code. 4 modules is the standard.</p>
       </Section>
 
       <Section
