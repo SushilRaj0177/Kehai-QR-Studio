@@ -248,6 +248,25 @@ code {
   box-shadow: 0 0 10px var(--shu);
 }
 
+.lang-toggle {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+.lang-toggle:hover {
+  color: var(--text);
+  border-color: var(--shu);
+}
 .icon-button {
   display: inline-grid;
   place-items: center;
@@ -307,6 +326,36 @@ code {
 }
 .eyebrow--accent {
   color: var(--accent-text);
+}
+
+/* Japanese UI: Latin stays in Inter/Space Grotesk, Japanese falls back to
+   the system's Japanese fonts (the bundled Noto Sans JP is only a
+   900-weight subset for the kanji watermarks, so it must not be used for
+   body text). Uppercase letter-spaced labels read badly in Japanese. */
+html[lang="ja"] {
+  --font-body: "Inter", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+  line-break: strict;
+}
+html[lang="ja"] .eyebrow,
+html[lang="ja"] .field__label,
+html[lang="ja"] .link-button {
+  font-family: var(--font-body);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+html[lang="ja"] h1,
+html[lang="ja"] h2 {
+  letter-spacing: 0;
+  word-break: auto-phrase; /* break between phrases, not mid-word (Chromium) */
+}
+html[lang="ja"] .kind-tab__label {
+  word-break: keep-all;
+}
+@media (max-width: 600px) {
+  html[lang="ja"] .kind-tab__label {
+    font-size: 11px;
+  }
 }
 
 /* ---------------------------------------------------------------- layout */

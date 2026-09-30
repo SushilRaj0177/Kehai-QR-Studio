@@ -1,6 +1,7 @@
 import { KINDS, normalizeUrl, type AllFields, type FieldErrors, type QrKind, type WifiSecurity } from "../lib/qrTypes";
 import { Field } from "./Field";
 import { KindIcon } from "./icons";
+import { rich, useI18n } from "../i18n/I18nContext";
 
 interface Props {
   kind: QrKind;
@@ -14,11 +15,12 @@ interface Props {
 }
 
 export function ContentForm({ kind, fields, errors, visible, onKind, onChange, onTouch }: Props) {
+  const { t } = useI18n();
   const err = (name: string) => (visible.has(name) ? errors[name] : undefined);
 
   return (
     <div className="content-form">
-      <div className="kind-tabs" role="radiogroup" aria-label="QR code type">
+      <div className="kind-tabs" role="radiogroup" aria-label={t("QR code type")}>
         {KINDS.map((k) => (
           <label key={k.id} className={`kind-tab${kind === k.id ? " is-active" : ""}`}>
             <input
@@ -30,8 +32,8 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
               className="visually-hidden"
             />
             <KindIcon kind={k.id} />
-            <span className="kind-tab__label">{k.label}</span>
-            <span className="kind-tab__hint">{k.hint}</span>
+            <span className="kind-tab__label">{t(k.label)}</span>
+            <span className="kind-tab__hint">{t(k.hint)}</span>
           </label>
         ))}
       </div>
@@ -40,12 +42,12 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
         {kind === "url" && (
           <Field
             id="url"
-            label="Website URL"
+            label={t("Website URL")}
             error={err("url")}
             hint={
               fields.url.url.trim() && !errors.url && normalizeUrl(fields.url.url) !== fields.url.url.trim()
-                ? <>Will open <code>{normalizeUrl(fields.url.url)}</code></>
-                : "Paste a link — https:// is added if you leave it out."
+                ? rich(t("Will open {url}"), { url: <code>{normalizeUrl(fields.url.url)}</code> })
+                : t("Paste a link — https:// is added if you leave it out.")
             }
           >
             {(d) => (
@@ -70,16 +72,16 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
         {kind === "text" && (
           <Field
             id="text"
-            label="Text"
+            label={t("Text")}
             error={err("text")}
-            hint={`${fields.text.text.length} characters · shown as-is when scanned`}
+            hint={t("{n} characters · shown as-is when scanned", { n: fields.text.text.length })}
           >
             {(d) => (
               <textarea
                 id="text"
                 className="input input--area"
                 rows={4}
-                placeholder="Anything — a note, a code, a message…"
+                placeholder={t("Anything — a note, a code, a message…")}
                 value={fields.text.text}
                 aria-invalid={!!err("text")}
                 aria-describedby={d}
@@ -92,7 +94,7 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
 
         {kind === "email" && (
           <>
-            <Field id="email-address" label="To" error={err("address")}>
+            <Field id="email-address" label={t("To")} error={err("address")}>
               {(d) => (
                 <input
                   id="email-address"
@@ -109,13 +111,13 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
                 />
               )}
             </Field>
-            <Field id="email-subject" label="Subject" optional error={err("subject")}>
+            <Field id="email-subject" label={t("Subject")} optional error={err("subject")}>
               {(d) => (
                 <input
                   id="email-subject"
                   className="input"
                   type="text"
-                  placeholder="Hello!"
+                  placeholder={t("Hello!")}
                   value={fields.email.subject}
                   aria-invalid={!!err("subject")}
                   aria-describedby={d}
@@ -124,13 +126,13 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
                 />
               )}
             </Field>
-            <Field id="email-body" label="Message" optional error={err("body")}>
+            <Field id="email-body" label={t("Message")} optional error={err("body")}>
               {(d) => (
                 <textarea
                   id="email-body"
                   className="input input--area"
                   rows={3}
-                  placeholder="Pre-filled message body"
+                  placeholder={t("Pre-filled message body")}
                   value={fields.email.body}
                   aria-invalid={!!err("body")}
                   aria-describedby={d}
@@ -145,9 +147,9 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
         {kind === "phone" && (
           <Field
             id="phone"
-            label="Phone number"
+            label={t("Phone number")}
             error={err("phone")}
-            hint="Include the country code (e.g. +91) so it works from anywhere."
+            hint={t("Include the country code (e.g. +91) so it works from anywhere.")}
           >
             {(d) => (
               <input
@@ -169,7 +171,7 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
 
         {kind === "wifi" && (
           <>
-            <Field id="wifi-ssid" label="Network name (SSID)" error={err("ssid")}>
+            <Field id="wifi-ssid" label={t("Network name (SSID)")} error={err("ssid")}>
               {(d) => (
                 <input
                   id="wifi-ssid"
@@ -186,9 +188,9 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
                 />
               )}
             </Field>
-            <Field id="wifi-security" label="Security">
+            <Field id="wifi-security" label={t("Security")}>
               {(d) => (
-                <div className="segmented" role="radiogroup" aria-label="Wi-Fi security" aria-describedby={d}>
+                <div className="segmented" role="radiogroup" aria-label={t("Wi-Fi security")} aria-describedby={d}>
                   {(
                     [
                       ["WPA", "WPA/WPA2/WPA3"],
@@ -204,14 +206,14 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
                         checked={fields.wifi.security === value}
                         onChange={() => onChange("wifi", { security: value })}
                       />
-                      {label}
+                      {t(label)}
                     </label>
                   ))}
                 </div>
               )}
             </Field>
             {fields.wifi.security !== "nopass" && (
-              <Field id="wifi-password" label="Password" error={err("password")}>
+              <Field id="wifi-password" label={t("Password")} error={err("password")}>
                 {(d) => (
                   <input
                     id="wifi-password"
@@ -219,7 +221,7 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
                     type="text"
                     autoComplete="off"
                     spellCheck={false}
-                    placeholder={fields.wifi.security === "WEP" ? "5 or 13 characters" : "8–63 characters"}
+                    placeholder={fields.wifi.security === "WEP" ? t("5 or 13 characters") : t("8–63 characters")}
                     value={fields.wifi.password}
                     aria-invalid={!!err("password")}
                     aria-describedby={d}
@@ -235,7 +237,7 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
                 checked={fields.wifi.hidden}
                 onChange={(e) => onChange("wifi", { hidden: e.target.checked })}
               />
-              <span>Hidden network</span>
+              <span>{t("Hidden network")}</span>
             </label>
           </>
         )}

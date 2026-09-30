@@ -49,11 +49,23 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **76 unit/component tests** (Vitest) plus **27 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **81 unit/component tests** (Vitest) plus **30 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
-**Extras:** ✨ **automatic website logos** for URL codes (see below) · 📤 **Share** button on phones (native share sheet).
+**Extras:** ✨ **automatic website logos** for URL codes (see below) · 📤 **Share** button on phones (native share sheet) · 🇯🇵 **English / 日本語** language toggle (see below).
+
+### English / 日本語
+
+The **日本語 / EN** button in the top bar switches the whole interface: labels, hints, validation errors, readability warnings, the scan badge, toasts, recent-code times and screen-reader labels. The QR **content** is never translated; a code encodes exactly what you typed.
+
+- **First visit** follows the browser language (`ja-*` starts in Japanese). After that the choice is saved in `localStorage` (`kqs.lang`), and `<html lang>` is updated so screen readers and line breaking use Japanese rules.
+- **No i18n library.** `src/i18n/` holds a ~40-line translator and a dictionary keyed by the English text itself: `t("Download PNG")` returns `PNG をダウンロード` in Japanese and falls back to English for anything missing. `{name}` placeholders handle numbers and domains, and a small `rich()` helper places links or bold text in sentences whose word order differs between the two languages.
+- **Pure logic stays pure.** `validate()` and `analyze()` take an optional `t` that defaults to English, so the unit tests and library code still work without React.
+- **Typography:** Japanese text uses the system's Japanese fonts. The bundled Noto Sans JP is only a heavy kanji subset for the watermarks. Letter-spaced uppercase labels switch to the body font, and headings break between phrases (`word-break: auto-phrase`).
+- **Tested:**
+  - a unit test scans the source for every `t("…")` call and fails if any string has no Japanese translation, if an unused translation is left over, or if the placeholders differ;
+  - end-to-end tests switch language, check translated errors and the scan status, decode a download made in Japanese, confirm the choice survives a reload, confirm a `ja-JP` browser starts in Japanese, and confirm the Japanese UI doesn't overflow a 360 px phone.
 
 ### Copy & share across browsers
 
@@ -168,6 +180,10 @@ src/
 │   ├── useRecent.ts        History state, synced across tabs
 │   ├── useSiteLogo.ts      Auto-adds/removes the link's website logo; remove/restore/toggle
 │   └── useTheme.ts         Dark/light theme, persisted, no flash on load
+├── i18n/
+│   ├── i18n.ts             Translator (English text as key, {placeholders}), language detection
+│   ├── ja.ts               Japanese dictionary
+│   └── I18nContext.tsx     Language state + context, rich() for inline markup
 ├── components/             ContentForm, DesignPanel, Preview, RecentList, KehaiCallout, …
 └── App.tsx                 State wiring
 e2e/                        Playwright: behaviour, responsive layout, README screenshots
@@ -204,8 +220,8 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 76 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 27 end-to-end tests in Chromium (desktop + Pixel 7)
+npm test             # 81 unit + component tests (Vitest, jsdom)
+npm run test:e2e     # 30 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 
@@ -217,7 +233,7 @@ What the end-to-end suite verifies, in a real browser:
 - **Presets** apply and stay editable. **Invalid input** shows errors and blocks export. **Risky designs** raise warnings.
 - A **logo** raises error correction and still scans. **SVG export** is a valid SVG document.
 - **Recent codes survive a reload** and restore type, content and preset. Removing and clearing work.
-- The **theme** persists. On a **phone** there's no horizontal scrolling, the preview sits under the form, and all tabs are reachable.
+- The **theme** and **language** persist, and the Japanese UI works end to end. On a **phone** there's no horizontal scrolling, the preview sits under the form, and all tabs are reachable.
 - **Website logos:** the favicon services are stubbed with a generated image, so the tests never depend on the internet. The tests cover:
   - a link gets its site's logo automatically (verified in the centre pixel of the download), and the code still decodes;
   - only the domain is sent;

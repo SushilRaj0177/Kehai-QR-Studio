@@ -1,3 +1,4 @@
+import { en, type Translate } from "../i18n/i18n";
 import { marginPx, moduleCount, type ErrorLevel, type QrDesign } from "./design";
 
 /**
@@ -86,7 +87,7 @@ export function geometry(data: string, design: QrDesign): Geometry | null {
 
 // ------------------------------------------------------------ analysis
 
-export function analyze(data: string, design: QrDesign): ReadabilityIssue[] {
+export function analyze(data: string, design: QrDesign, t: Translate = en): ReadabilityIssue[] {
   const issues: ReadabilityIssue[] = [];
   const geo = geometry(data, design);
 
@@ -94,8 +95,8 @@ export function analyze(data: string, design: QrDesign): ReadabilityIssue[] {
     issues.push({
       id: "overflow",
       severity: "error",
-      title: "Too much data",
-      detail: `This content doesn't fit in a QR code at error-correction level ${design.errorLevel}. Shorten it or lower the level.`,
+      title: t("Too much data"),
+      detail: t("This content doesn't fit in a QR code at error-correction level {level}. Shorten it or lower the level.", { level: design.errorLevel }),
     });
     return issues;
   }
@@ -109,15 +110,15 @@ export function analyze(data: string, design: QrDesign): ReadabilityIssue[] {
     issues.push({
       id: "contrast",
       severity: "error",
-      title: `Contrast too low (${ratio}:1)`,
-      detail: "The code and background colours are too similar for cameras to separate. Aim for at least 4:1.",
+      title: t("Contrast too low ({ratio}:1)", { ratio }),
+      detail: t("The code and background colours are too similar for cameras to separate. Aim for at least 4:1."),
     });
   } else if (worst < 4) {
     issues.push({
       id: "contrast",
       severity: "warn",
-      title: `Low contrast (${ratio}:1)`,
-      detail: "May fail in dim light or on glossy prints. 4:1 or higher is recommended.",
+      title: t("Low contrast ({ratio}:1)", { ratio }),
+      detail: t("May fail in dim light or on glossy prints. 4:1 or higher is recommended."),
     });
   }
 
@@ -125,8 +126,8 @@ export function analyze(data: string, design: QrDesign): ReadabilityIssue[] {
     issues.push({
       id: "inverted",
       severity: "warn",
-      title: "Inverted colours",
-      detail: "A light code on a dark background can't be read by many scanner apps and older phones. Use a darker code colour than the background.",
+      title: t("Inverted colours"),
+      detail: t("A light code on a dark background can't be read by many scanner apps and older phones. Use a darker code colour than the background."),
     });
   }
 
@@ -134,15 +135,15 @@ export function analyze(data: string, design: QrDesign): ReadabilityIssue[] {
     issues.push({
       id: "quiet-zone",
       severity: "error",
-      title: "No quiet zone",
-      detail: "Scanners need empty space around the code to find its edges. Increase the margin to at least 2 modules (4 is ideal).",
+      title: t("No quiet zone"),
+      detail: t("Scanners need empty space around the code to find its edges. Increase the margin to at least 2 modules (4 is ideal)."),
     });
   } else if (geo.quietZoneModules < 2) {
     issues.push({
       id: "quiet-zone",
       severity: "warn",
-      title: "Tight margin",
-      detail: `The margin is about ${geo.quietZoneModules.toFixed(1)} modules wide. 4 modules is the standard; below 2 some scanners struggle.`,
+      title: t("Tight margin"),
+      detail: t("The margin is about {n} modules wide. 4 modules is the standard; below 2 some scanners struggle.", { n: geo.quietZoneModules.toFixed(1) }),
     });
   }
 
@@ -150,15 +151,15 @@ export function analyze(data: string, design: QrDesign): ReadabilityIssue[] {
     issues.push({
       id: "module-size",
       severity: "error",
-      title: "Modules too small",
-      detail: `Each square is under 2px at this size. Increase the size or shorten the content.`,
+      title: t("Modules too small"),
+      detail: t("Each square is under 2px at this size. Increase the size or shorten the content."),
     });
   } else if (geo.modulePx < 3) {
     issues.push({
       id: "module-size",
       severity: "warn",
-      title: "Small modules",
-      detail: `Each square is only ${geo.modulePx}px. Increase the size for screens, and print at 2 cm or larger.`,
+      title: t("Small modules"),
+      detail: t("Each square is only {n}px. Increase the size for screens, and print at 2 cm or larger.", { n: geo.modulePx }),
     });
   }
 
@@ -170,15 +171,15 @@ export function analyze(data: string, design: QrDesign): ReadabilityIssue[] {
       issues.push({
         id: "logo",
         severity: "error",
-        title: "Logo covers too much",
-        detail: `The logo hides about ${pct}% of the code, but level ${design.errorLevel} only recovers ~${Math.round(capacity * 100)}%. Shrink the logo or raise error correction to High.`,
+        title: t("Logo covers too much"),
+        detail: t("The logo hides about {pct}% of the code, but level {level} only recovers ~{cap}%. Shrink the logo or raise error correction to High.", { pct, level: design.errorLevel, cap: Math.round(capacity * 100) }),
       });
     } else if (coverage > capacity * 0.5) {
       issues.push({
         id: "logo",
         severity: "warn",
-        title: "Large logo",
-        detail: `The logo hides about ${pct}% of the code — over half of what level ${design.errorLevel} can recover. Consider High error correction.`,
+        title: t("Large logo"),
+        detail: t("The logo hides about {pct}% of the code — over half of what level {level} can recover. Consider High error correction.", { pct, level: design.errorLevel }),
       });
     }
   }
@@ -187,8 +188,8 @@ export function analyze(data: string, design: QrDesign): ReadabilityIssue[] {
     issues.push({
       id: "dot-style",
       severity: "warn",
-      title: "Decorative modules need headroom",
-      detail: "Round and cut-corner modules leave less ink for the camera. Use error correction Q or H with this style.",
+      title: t("Decorative modules need headroom"),
+      detail: t("Round and cut-corner modules leave less ink for the camera. Use error correction Q or H with this style."),
     });
   }
 
@@ -196,8 +197,8 @@ export function analyze(data: string, design: QrDesign): ReadabilityIssue[] {
     issues.push({
       id: "density",
       severity: "warn",
-      title: "Very dense code",
-      detail: `This content needs a ${geo.modules}×${geo.modules} grid. Shorten it, or print large, so phones can resolve every module.`,
+      title: t("Very dense code"),
+      detail: t("This content needs a {n}×{n} grid. Shorten it, or print large, so phones can resolve every module.", { n: geo.modules }),
     });
   }
 

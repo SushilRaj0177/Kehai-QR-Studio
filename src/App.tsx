@@ -16,6 +16,7 @@ import { analyze } from "./lib/readability";
 import { canCopyImage, canShareImage, copyImage, downloadBlob, fileBaseName, makeThumbnail, shareImage } from "./lib/exporting";
 import { newId, type RecentEntry } from "./lib/history";
 import { KEHAI_URL, REPO_URL } from "./lib/links";
+import { I18nContext, rich, useLangState } from "./i18n/I18nContext";
 
 type Toast = { tone: "ok" | "error" | "info"; text: string } | null;
 
@@ -28,6 +29,8 @@ const PLACEHOLDERS: Record<QrKind, string> = {
 };
 
 export default function App() {
+  const i18n = useLangState();
+  const { t, lang, setLang } = i18n;
   const { theme, toggle } = useTheme();
   const { recent, add, remove, clear } = useRecent();
 
@@ -40,9 +43,9 @@ export default function App() {
   const toastTimer = useRef<number | undefined>(undefined);
 
   const current = fields[kind];
-  const errors = useMemo(() => validate(kind, current), [kind, current]);
+  const errors = useMemo(() => validate(kind, current, t), [kind, current, t]);
   const payload = useMemo(() => encode(kind, current), [kind, current]);
-  const issues = useMemo(() => (payload ? analyze(payload, design) : []), [payload, design]);
+  const issues = useMemo(() => (payload ? analyze(payload, design, t) : []), [payload, design, t]);
   const activePreset = useMemo(() => matchingPreset(design), [design]);
 
   const { containerRef, getBlob } = useQrRenderer(payload, design);
@@ -79,9 +82,11 @@ export default function App() {
     (domain: string, raised: boolean) =>
       notify({
         tone: "info",
-        text: `Added ${domain}'s logo${raised ? " and raised error correction to High" : ""} — remove or replace it under Logo.`,
+        text: raised
+          ? t("Added {domain}'s logo and raised error correction to High — remove or replace it under Logo.", { domain })
+          : t("Added {domain}'s logo — remove or replace it under Logo.", { domain }),
       }),
-    [notify],
+    [notify, t],
   );
   const siteLogo = useSiteLogo({ kind, payload, design, setDesign, onFound: onSiteLogoFound });
 
@@ -91,14 +96,14 @@ export default function App() {
       const d = design;
       if (!src && d.logo.origin === "site" && d.logo.siteDomain) siteLogo.dismiss(d.logo.siteDomain);
       const raise = !!src && !d.logo.src && (d.errorLevel === "L" || d.errorLevel === "M");
-      if (raise) notify({ tone: "info", text: "Error correction raised to High to make room for the logo." });
+      if (raise) notify({ tone: "info", text: t("Error correction raised to High to make room for the logo.") });
       setDesign((cur) => ({
         ...cur,
         errorLevel: raise ? "H" : cur.errorLevel,
         logo: { ...cur.logo, src, origin: src ? "upload" : null, siteDomain: null },
       }));
     },
-    [design, notify, siteLogo],
+    [design, notify, siteLogo, t],
   );
 
   const remember = useCallback(
@@ -127,17 +132,17 @@ export default function App() {
       setBusy(ext);
       try {
         const blob = await getBlob(ext);
-        if (!blob) throw new Error("Nothing to download yet.");
+        if (!blob) throw new Error(t("Nothing to download yet."));
         downloadBlob(blob, `${fileBaseName(describe(kind, current))}.${ext}`);
         await remember(ext === "png" ? blob : null);
-        notify({ tone: "ok", text: `Downloaded ${ext.toUpperCase()}.` });
+        notify({ tone: "ok", text: t("Downloaded {format}.", { format: ext.toUpperCase() }) });
       } catch (e) {
-        notify({ tone: "error", text: e instanceof Error ? e.message : "Download failed." });
+        notify({ tone: "error", text: e instanceof Error ? e.message : t("Download failed.") });
       } finally {
         setBusy(null);
       }
     },
-    [payload, getBlob, kind, current, remember, notify],
+    [payload, getBlob, kind, current, remember, notify, t],
   );
 
   const shareSupported = useMemo(() => canShareImage(), []);
@@ -145,22 +150,22 @@ export default function App() {
 
   const pngOrThrow = useCallback(async () => {
     const blob = await getBlob("png");
-    if (!blob) throw new Error("Nothing to export yet.");
+    if (!blob) throw new Error(t("Nothing to export yet."));
     return blob;
-  }, [getBlob]);
+  }, [getBlob, t]);
 
   /** Opens the native share sheet; returns false if the user cancelled. */
   const share = useCallback(
     async (blob: Blob) => {
       try {
-        await shareImage(blob, `${fileBaseName(describe(kind, current))}.png`, "QR code");
+        await shareImage(blob, `${fileBaseName(describe(kind, current))}.png`, t("QR code"));
         return true;
       } catch (e) {
         if ((e as Error)?.name === "AbortError") return false;
         throw e;
       }
     },
-    [kind, current],
+    [kind, current, t],
   );
 
   const onCopy = useCallback(async () => {
@@ -172,7 +177,7 @@ export default function App() {
     try {
       await copyImage(image);
       await remember(await image);
-      notify({ tone: "ok", text: "Copied the image to your clipboard." });
+      notify({ tone: "ok", text: t("Copied the image to your clipboard.") });
     } catch {
       // Some mobile browsers refuse to put images on the clipboard at all:
       // fall back to the share sheet, where "Copy" or any app is one tap away.
@@ -181,18 +186,18 @@ export default function App() {
         if (shareSupported) {
           if (await share(blob)) {
             await remember(blob);
-            notify({ tone: "info", text: "This browser can't copy images, so the share menu opened instead." });
+            notify({ tone: "info", text: t("This browser can't copy images, so the share menu opened instead.") });
           }
         } else {
-          notify({ tone: "error", text: "This browser doesn't allow copying images — use Download instead." });
+          notify({ tone: "error", text: t("This browser doesn't allow copying images — use Download instead.") });
         }
       } catch {
-        notify({ tone: "error", text: "Couldn't copy or share the image — use Download instead." });
+        notify({ tone: "error", text: t("Couldn't copy or share the image — use Download instead.") });
       }
     } finally {
       setBusy(null);
     }
-  }, [pngOrThrow, remember, notify, shareSupported, share]);
+  }, [pngOrThrow, remember, notify, shareSupported, share, t]);
 
   const onShare = useCallback(async () => {
     setBusy("share");
@@ -200,21 +205,21 @@ export default function App() {
       const blob = await pngOrThrow();
       if (await share(blob)) await remember(blob);
     } catch {
-      notify({ tone: "error", text: "Sharing failed — use Download instead." });
+      notify({ tone: "error", text: t("Sharing failed — use Download instead.") });
     } finally {
       setBusy(null);
     }
-  }, [pngOrThrow, share, remember, notify]);
+  }, [pngOrThrow, share, remember, notify, t]);
 
   const onSave = useCallback(async () => {
     setBusy("save");
     try {
       await remember();
-      notify({ tone: "ok", text: "Saved to recent codes." });
+      notify({ tone: "ok", text: t("Saved to recent codes.") });
     } finally {
       setBusy(null);
     }
-  }, [remember, notify]);
+  }, [remember, notify, t]);
 
   const onUse = useCallback(
     (entry: RecentEntry) => {
@@ -222,22 +227,23 @@ export default function App() {
       setFields((f) => ({ ...f, [entry.kind]: { ...DEFAULT_FIELDS[entry.kind], ...entry.fields } }));
       setDesign({ ...DEFAULT_DESIGN, ...entry.design, logo: { ...DEFAULT_DESIGN.logo, ...entry.design.logo } });
       setTouched(new Set());
-      notify({ tone: "info", text: `Loaded “${entry.label || "code"}” — edit away.` });
+      notify({ tone: "info", text: t("Loaded “{label}” — edit away.", { label: entry.label || t("code") }) });
       document.getElementById("studio")?.scrollIntoView({ behavior: "smooth", block: "start" });
     },
-    [notify],
+    [notify, t],
   );
 
-  const kindLabel = KINDS.find((k) => k.id === kind)?.label ?? "";
+  const kindLabel = t(KINDS.find((k) => k.id === kind)?.label ?? "");
 
   return (
+    <I18nContext.Provider value={i18n}>
     <div className="app">
       <div className="backdrop" aria-hidden>
         <span className="backdrop__kanji">符</span>
       </div>
 
       <header className="topbar">
-        <a className="brand" href="/" aria-label="Kehai QR Studio home">
+        <a className="brand" href="/" aria-label={t("Kehai QR Studio home")}>
           <span className="brand__mark" aria-hidden>
             符
           </span>
@@ -245,18 +251,27 @@ export default function App() {
             KEHAI <span className="brand__sub">QR STUDIO</span>
           </span>
         </a>
-        <nav className="topbar__actions" aria-label="Site">
+        <nav className="topbar__actions" aria-label={t("Site")}>
           <a className="pill-link" href={KEHAI_URL} target="_blank" rel="noopener">
             <span className="pill-link__dot" aria-hidden /> Kehai Engine
           </a>
-          <a className="icon-button" href={REPO_URL} target="_blank" rel="noopener" aria-label="Source on GitHub">
+          <a className="icon-button" href={REPO_URL} target="_blank" rel="noopener" aria-label={t("Source on GitHub")}>
             <Icon name="github" />
           </a>
           <button
             type="button"
+            className="lang-toggle"
+            onClick={() => setLang(lang === "en" ? "ja" : "en")}
+            aria-label={lang === "en" ? "日本語に切り替える (Switch to Japanese)" : "Switch to English (英語に切り替える)"}
+            data-testid="lang-toggle"
+          >
+            {lang === "en" ? <span lang="ja">日本語</span> : <span lang="en">EN</span>}
+          </button>
+          <button
+            type="button"
             className="icon-button"
             onClick={toggle}
-            aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            aria-label={theme === "dark" ? t("Switch to light theme") : t("Switch to dark theme")}
             data-testid="theme-toggle"
           >
             <Icon name={theme === "dark" ? "sun" : "moon"} />
@@ -265,13 +280,12 @@ export default function App() {
       </header>
 
       <section className="hero">
-        <p className="eyebrow eyebrow--accent">QR code generator &amp; designer</p>
-        <h1>
-          Design QR codes that <span className="accent">actually scan.</span>
-        </h1>
+        <p className="eyebrow eyebrow--accent">{t("QR code generator & designer")}</p>
+        <h1>{rich(t("Design QR codes that {accent}"), { accent: <span className="accent">{t("actually scan.")}</span> })}</h1>
         <p className="hero__sub">
-          Links, text, email, phone and Wi-Fi — styled your way, verified live by decoding the exact image you'll download. Runs entirely in
-          your browser.
+          {t(
+            "Links, text, email, phone and Wi-Fi — styled your way, verified live by decoding the exact image you'll download. Runs entirely in your browser.",
+          )}
         </p>
       </section>
 
@@ -279,8 +293,8 @@ export default function App() {
         <section className="panel panel--content" aria-labelledby="content-title">
           <div className="panel__head">
             <div>
-              <span className="eyebrow">01 · Content</span>
-              <h2 id="content-title">What should it open?</h2>
+              <span className="eyebrow">01 · {t("Content")}</span>
+              <h2 id="content-title">{t("What should it open?")}</h2>
             </div>
           </div>
           <ContentForm
@@ -294,11 +308,11 @@ export default function App() {
           />
         </section>
 
-        <aside className="panel panel--preview" aria-label={`${kindLabel} QR preview`}>
+        <aside className="panel panel--preview" aria-label={t("{kind} QR preview", { kind: kindLabel })}>
           <Preview
             containerRef={containerRef}
             payload={payload}
-            placeholder={PLACEHOLDERS[kind]}
+            placeholder={t(PLACEHOLDERS[kind])}
             design={design}
             scan={scan}
             issues={issues}
@@ -316,11 +330,11 @@ export default function App() {
         <section className="panel panel--design" aria-labelledby="design-title">
           <div className="panel__head">
             <div>
-              <span className="eyebrow">02 · Design</span>
-              <h2 id="design-title">Make it yours</h2>
+              <span className="eyebrow">02 · {t("Design")}</span>
+              <h2 id="design-title">{t("Make it yours")}</h2>
             </div>
             <button type="button" className="link-button" onClick={() => setDesign((d) => ({ ...DEFAULT_DESIGN, logo: d.logo }))}>
-              Reset
+              {t("Reset")}
             </button>
           </div>
           <DesignPanel
@@ -343,13 +357,22 @@ export default function App() {
 
       <footer className="footer">
         <p>
-          <strong>Private by design.</strong> There is no server: what you type and upload stays on this page. The only outside
-          request is optional — a link's domain name is sent to a public favicon service to fetch its logo.
+          <strong>{t("Private by design.")}</strong>{" "}
+          {t(
+            "There is no server: what you type and upload stays on this page. The only outside request is optional — a link's domain name is sent to a public favicon service to fetch its logo.",
+          )}
         </p>
         <p className="footer__links">
-          Part of the <a href={KEHAI_URL} target="_blank" rel="noopener">Kehai</a> ecosystem ·{" "}
+          {rich(t("Part of the {kehai} ecosystem"), {
+            kehai: (
+              <a href={KEHAI_URL} target="_blank" rel="noopener">
+                Kehai
+              </a>
+            ),
+          })}{" "}
+          ·{" "}
           <a href={REPO_URL} target="_blank" rel="noopener">
-            Source
+            {t("Source")}
           </a>
         </p>
       </footer>
@@ -358,5 +381,6 @@ export default function App() {
         {toast?.text}
       </div>
     </div>
+    </I18nContext.Provider>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useI18n } from "../i18n/I18nContext";
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
@@ -15,6 +16,7 @@ interface Props {
 
 /** Native colour picker paired with an editable hex field. */
 export function ColorInput({ id, label, value, onChange }: Props) {
+  const { t } = useI18n();
   const [text, setText] = useState(value);
   // Sync from outside (preset, swap, picker) — but not while the text
   // already represents this colour, or typing "#123456" would be
@@ -32,7 +34,7 @@ export function ColorInput({ id, label, value, onChange }: Props) {
       <div className={`color-input__row${invalid ? " is-invalid" : ""}`}>
         <input
           type="color"
-          aria-label={`${label} picker`}
+          aria-label={t("{label} picker", { label })}
           value={expand(value)}
           onChange={(e) => onChange(e.target.value)}
           className="color-input__swatch"

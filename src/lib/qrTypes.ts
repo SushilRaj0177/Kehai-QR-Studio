@@ -5,6 +5,7 @@
  *
  * Everything here is pure (no DOM, no React) so it is fully unit-tested.
  */
+import { en, type Translate } from "../i18n/i18n";
 
 export type QrKind = "url" | "text" | "email" | "phone" | "wifi";
 
@@ -74,34 +75,34 @@ export function normalizeUrl(raw: string): string {
   return /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
-export function validateUrl(f: UrlFields): FieldErrors {
+export function validateUrl(f: UrlFields, t: Translate = en): FieldErrors {
   const raw = f.url.trim();
-  if (!raw) return { url: "Enter a website address." };
-  if (/\s/.test(raw)) return { url: "A URL can't contain spaces." };
+  if (!raw) return { url: t("Enter a website address.") };
+  if (/\s/.test(raw)) return { url: t("A URL can't contain spaces.") };
   let parsed: URL;
   try {
     parsed = new URL(normalizeUrl(raw));
   } catch {
-    return { url: "That doesn't look like a valid URL." };
+    return { url: t("That doesn't look like a valid URL.") };
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    return { url: "Only http:// and https:// links are supported." };
+    return { url: t("Only http:// and https:// links are supported.") };
   }
   const host = parsed.hostname;
   const isIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
   if (host !== "localhost" && !isIp && !/\.[a-z]{2,}$/i.test(host)) {
-    return { url: "Add a domain ending, e.g. example.com." };
+    return { url: t("Add a domain ending, e.g. example.com.") };
   }
-  if (raw.length > MAX_TEXT_LENGTH) return { url: `Keep URLs under ${MAX_TEXT_LENGTH} characters.` };
+  if (raw.length > MAX_TEXT_LENGTH) return { url: t("Keep URLs under {max} characters.", { max: MAX_TEXT_LENGTH }) };
   return {};
 }
 
 // ---------------------------------------------------------------- Text
 
-export function validateText(f: TextFields): FieldErrors {
-  if (!f.text.trim()) return { text: "Enter some text to encode." };
+export function validateText(f: TextFields, t: Translate = en): FieldErrors {
+  if (!f.text.trim()) return { text: t("Enter some text to encode.") };
   if (f.text.length > MAX_TEXT_LENGTH) {
-    return { text: `That's ${f.text.length} characters — keep it under ${MAX_TEXT_LENGTH} so the code stays scannable.` };
+    return { text: t("That's {n} characters — keep it under {max} so the code stays scannable.", { n: f.text.length, max: MAX_TEXT_LENGTH }) };
   }
   return {};
 }
@@ -112,13 +113,13 @@ export function validateText(f: TextFields): FieldErrors {
 // domain, no spaces. This rejects the typos people actually make.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 
-export function validateEmail(f: EmailFields): FieldErrors {
+export function validateEmail(f: EmailFields, t: Translate = en): FieldErrors {
   const errors: FieldErrors = {};
   const address = f.address.trim();
-  if (!address) errors.address = "Enter the recipient's email address.";
-  else if (!EMAIL_RE.test(address)) errors.address = "That email address isn't valid.";
-  if (f.subject.length > 200) errors.subject = "Keep the subject under 200 characters.";
-  if (f.body.length > 800) errors.body = "Keep the message under 800 characters.";
+  if (!address) errors.address = t("Enter the recipient's email address.");
+  else if (!EMAIL_RE.test(address)) errors.address = t("That email address isn't valid.");
+  if (f.subject.length > 200) errors.subject = t("Keep the subject under 200 characters.");
+  if (f.body.length > 800) errors.body = t("Keep the message under 800 characters.");
   return errors;
 }
 
@@ -138,16 +139,16 @@ export function normalizePhone(raw: string): string {
   return plus + trimmed.replace(/\D/g, "");
 }
 
-export function validatePhone(f: PhoneFields): FieldErrors {
+export function validatePhone(f: PhoneFields, t: Translate = en): FieldErrors {
   const raw = f.phone.trim();
-  if (!raw) return { phone: "Enter a phone number." };
-  if (raw.lastIndexOf("+") > 0) return { phone: "A + can only appear at the start." };
-  if (!/^\+?[\d\s\-().]+$/.test(raw)) return { phone: "Use digits, spaces, dashes or brackets only (and an optional leading +)." };
+  if (!raw) return { phone: t("Enter a phone number.") };
+  if (raw.lastIndexOf("+") > 0) return { phone: t("A + can only appear at the start.") };
+  if (!/^\+?[\d\s\-().]+$/.test(raw)) return { phone: t("Use digits, spaces, dashes or brackets only (and an optional leading +).") };
   const digits = raw.replace(/\D/g, "");
   // E.164 caps international numbers at 15 digits; 3 allows short codes
   // like emergency or service numbers.
-  if (digits.length < 3) return { phone: "That number is too short." };
-  if (digits.length > 15) return { phone: "Phone numbers have at most 15 digits." };
+  if (digits.length < 3) return { phone: t("That number is too short.") };
+  if (digits.length > 15) return { phone: t("Phone numbers have at most 15 digits.") };
   return {};
 }
 
@@ -158,24 +159,24 @@ export function escapeWifi(value: string): string {
   return value.replace(/([\\;,:"])/g, "\\$1");
 }
 
-export function validateWifi(f: WifiFields): FieldErrors {
+export function validateWifi(f: WifiFields, t: Translate = en): FieldErrors {
   const errors: FieldErrors = {};
   const ssidBytes = new TextEncoder().encode(f.ssid).length;
-  if (!f.ssid.trim()) errors.ssid = "Enter the network name (SSID).";
-  else if (ssidBytes > 32) errors.ssid = "Network names are at most 32 bytes.";
+  if (!f.ssid.trim()) errors.ssid = t("Enter the network name (SSID).");
+  else if (ssidBytes > 32) errors.ssid = t("Network names are at most 32 bytes.");
 
   if (f.security === "WPA") {
     const isHexKey = /^[0-9a-f]{64}$/i.test(f.password);
-    if (!f.password) errors.password = "WPA/WPA2 networks need a password.";
+    if (!f.password) errors.password = t("WPA/WPA2 networks need a password.");
     else if (!isHexKey && (f.password.length < 8 || f.password.length > 63)) {
-      errors.password = "WPA passwords are 8–63 characters (or a 64-digit hex key).";
+      errors.password = t("WPA passwords are 8–63 characters (or a 64-digit hex key).");
     }
   } else if (f.security === "WEP") {
     const len = f.password.length;
     const ascii = len === 5 || len === 13;
     const hex = (len === 10 || len === 26) && /^[0-9a-f]+$/i.test(f.password);
-    if (!f.password) errors.password = "WEP networks need a key.";
-    else if (!ascii && !hex) errors.password = "WEP keys are 5 or 13 characters, or 10 or 26 hex digits.";
+    if (!f.password) errors.password = t("WEP networks need a key.");
+    else if (!ascii && !hex) errors.password = t("WEP keys are 5 or 13 characters, or 10 or 26 hex digits.");
   }
   return errors;
 }
@@ -189,18 +190,18 @@ export function encodeWifi(f: WifiFields): string {
 
 // ---------------------------------------------------------------- dispatch
 
-export function validate<K extends QrKind>(kind: K, fields: FieldsByKind[K]): FieldErrors {
+export function validate<K extends QrKind>(kind: K, fields: FieldsByKind[K], t: Translate = en): FieldErrors {
   switch (kind) {
     case "url":
-      return validateUrl(fields as UrlFields);
+      return validateUrl(fields as UrlFields, t);
     case "text":
-      return validateText(fields as TextFields);
+      return validateText(fields as TextFields, t);
     case "email":
-      return validateEmail(fields as EmailFields);
+      return validateEmail(fields as EmailFields, t);
     case "phone":
-      return validatePhone(fields as PhoneFields);
+      return validatePhone(fields as PhoneFields, t);
     case "wifi":
-      return validateWifi(fields as WifiFields);
+      return validateWifi(fields as WifiFields, t);
     default:
       return {};
   }

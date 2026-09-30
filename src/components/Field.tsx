@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useI18n } from "../i18n/I18nContext";
 
 interface FieldProps {
   id: string;
@@ -11,6 +12,7 @@ interface FieldProps {
 
 /** Label + control + hint/error, wired up with aria-describedby. */
 export function Field({ id, label, error, hint, optional, children }: FieldProps) {
+  const { t } = useI18n();
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [errorId, hintId].filter(Boolean).join(" ") || undefined;
@@ -18,7 +20,7 @@ export function Field({ id, label, error, hint, optional, children }: FieldProps
     <div className={`field${error ? " field--error" : ""}`}>
       <label className="field__label" htmlFor={id}>
         {label}
-        {optional && <span className="field__optional">optional</span>}
+        {optional && <span className="field__optional">{t("optional")}</span>}
       </label>
       {children(describedBy)}
       {error ? (

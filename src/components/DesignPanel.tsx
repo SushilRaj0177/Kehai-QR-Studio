@@ -13,6 +13,7 @@ import {
 import type { SiteLogoStatus } from "../hooks/useSiteLogo";
 import { ColorInput } from "./ColorInput";
 import { Icon } from "./icons";
+import { rich, useI18n } from "../i18n/I18nContext";
 
 interface Props {
   design: QrDesign;
@@ -41,29 +42,33 @@ function Section({ title, children, aside }: { title: string; children: ReactNod
 }
 
 function SiteLogoLine({ status, hasLogo, onRestore }: { status: SiteLogoStatus; hasLogo: boolean; onRestore: (d: string) => void }) {
+  const { t } = useI18n();
   const { state, domain } = status;
   if (!domain) return null;
   if (state === "loading") {
     return (
       <p className="site-logo-line" role="status" data-testid="site-logo-status">
-        <span className="site-logo-line__spinner" aria-hidden /> Looking for {domain}'s logo…
+        <span className="site-logo-line__spinner" aria-hidden /> {t("Looking for {domain}'s logo…", { domain })}
       </p>
     );
   }
   if (state === "none" && !hasLogo) {
     return (
       <p className="site-logo-line muted" role="status" data-testid="site-logo-status">
-        No usable logo found for {domain} — add your own above.
+        {t("No usable logo found for {domain} — add your own above.", { domain })}
       </p>
     );
   }
   if (state === "dismissed") {
     return (
       <p className="site-logo-line muted" data-testid="site-logo-status">
-        {domain}'s logo removed.{" "}
-        <button type="button" className="link-inline" onClick={() => onRestore(domain)}>
-          Use it again
-        </button>
+        {rich(t("{domain}'s logo removed. {restore}", { domain }), {
+          restore: (
+            <button type="button" className="link-inline" onClick={() => onRestore(domain)}>
+              {t("Use it again")}
+            </button>
+          ),
+        })}
       </p>
     );
   }
@@ -72,6 +77,7 @@ function SiteLogoLine({ status, hasLogo, onRestore }: { status: SiteLogoStatus; 
 
 function Slider(props: { id: string; label: string; value: number; min: number; max: number; step: number; unit: string; onChange: (v: number) => void }) {
   const { id, label, value, min, max, step, unit, onChange } = props;
+  const { t } = useI18n();
   return (
     <div className="slider">
       <div className="slider__head">
@@ -80,7 +86,7 @@ function Slider(props: { id: string; label: string; value: number; min: number; 
         </label>
         <span className="slider__value">
           <input
-            aria-label={`${label} value`}
+            aria-label={t("{label} value", { label })}
             type="number"
             min={min}
             max={max}
@@ -100,12 +106,13 @@ function Slider(props: { id: string; label: string; value: number; min: number; 
 }
 
 function Chips<T extends string>({ label, options, value, onChange }: { label: string; options: { id: T; label: string }[]; value: T; onChange: (v: T) => void }) {
+  const { t } = useI18n();
   return (
     <div className="chips" role="radiogroup" aria-label={label}>
       {options.map((o) => (
         <label key={o.id} className={`chip${value === o.id ? " is-active" : ""}`}>
           <input type="radio" className="visually-hidden" name={label} checked={value === o.id} onChange={() => onChange(o.id)} />
-          {o.label}
+          {t(o.label)}
         </label>
       ))}
     </div>
@@ -113,6 +120,7 @@ function Chips<T extends string>({ label, options, value, onChange }: { label: s
 }
 
 export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, siteLogo, autoLogo, onAutoLogo, onRestoreSiteLogo }: Props) {
+  const { t } = useI18n();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [logoError, setLogoError] = useState<string | null>(null);
 
@@ -120,22 +128,22 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
     setLogoError(null);
     if (!file) return;
     if (!/^image\/(png|jpeg|webp|svg\+xml|gif)$/.test(file.type)) {
-      setLogoError("Use a PNG, JPG, WebP, GIF or SVG image.");
+      setLogoError(t("Use a PNG, JPG, WebP, GIF or SVG image."));
       return;
     }
     if (file.size > MAX_LOGO_BYTES) {
-      setLogoError("Logos must be under 2 MB.");
+      setLogoError(t("Logos must be under 2 MB."));
       return;
     }
     const reader = new FileReader();
     reader.onload = () => onLogo(String(reader.result));
-    reader.onerror = () => setLogoError("Couldn't read that file.");
+    reader.onerror = () => setLogoError(t("Couldn't read that file."));
     reader.readAsDataURL(file);
   }
 
   return (
     <div className="design-panel">
-      <Section title="Presets" aside={<span className="muted small">{activePreset ? "Tweak anything below" : "Custom"}</span>}>
+      <Section title={t("Presets")} aside={<span className="muted small">{activePreset ? t("Tweak anything below") : t("Custom")}</span>}>
         <div className="presets">
           {PRESETS.map((p) => {
             const d = p.design;
@@ -157,8 +165,8 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
                   <span style={style} className={`preset__dot preset__dot--${d.dotStyle}`} />
                 </span>
                 <span className="preset__text">
-                  <span className="preset__name">{p.name}</span>
-                  <span className="preset__note">{p.note}</span>
+                  <span className="preset__name">{t(p.name)}</span>
+                  <span className="preset__note">{t(p.note)}</span>
                 </span>
               </button>
             );
@@ -166,36 +174,36 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
         </div>
       </Section>
 
-      <Section title="Size & margin">
-        <Slider id="size" label="Size" value={design.size} min={SIZE_MIN} max={SIZE_MAX} step={8} unit="px" onChange={(size) => onChange({ size })} />
+      <Section title={t("Size & margin")}>
+        <Slider id="size" label={t("Size")} value={design.size} min={SIZE_MIN} max={SIZE_MAX} step={8} unit="px" onChange={(size) => onChange({ size })} />
         <Slider
           id="margin"
-          label="Margin"
+          label={t("Margin")}
           value={design.margin}
           min={0}
           max={MARGIN_MAX}
           step={1}
-          unit=" modules"
+          unit={` ${t("modules")}`}
           onChange={(margin) => onChange({ margin })}
         />
-        <p className="muted small">The quiet zone scanners need around the code. 4 modules is the standard.</p>
+        <p className="muted small">{t("The quiet zone scanners need around the code. 4 modules is the standard.")}</p>
       </Section>
 
       <Section
-        title="Colours"
+        title={t("Colours")}
         aside={
           <button
             type="button"
             className="link-button"
             onClick={() => onChange({ foreground: design.background, background: design.foreground })}
           >
-            Swap
+            {t("Swap")}
           </button>
         }
       >
         <div className="grid-2">
-          <ColorInput id="fg" label="Code" value={design.foreground} onChange={(foreground) => onChange({ foreground })} />
-          <ColorInput id="bg" label="Background" value={design.background} onChange={(background) => onChange({ background })} />
+          <ColorInput id="fg" label={t("Code")} value={design.foreground} onChange={(foreground) => onChange({ foreground })} />
+          <ColorInput id="bg" label={t("Background")} value={design.background} onChange={(background) => onChange({ background })} />
         </div>
         <label className="check">
           <input
@@ -203,20 +211,20 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
             checked={design.gradient.enabled}
             onChange={(e) => onChange({ gradient: { ...design.gradient, enabled: e.target.checked } })}
           />
-          <span>Gradient</span>
+          <span>{t("Gradient")}</span>
         </label>
         {design.gradient.enabled && (
           <div className="gradient-row">
             <ColorInput
               id="gradient"
-              label="Fade to"
+              label={t("Fade to")}
               value={design.gradient.color}
               onChange={(color) => onChange({ gradient: { ...design.gradient, color } })}
             />
             <div>
-              <span className="field__label">Type</span>
+              <span className="field__label">{t("Type")}</span>
               <Chips
-                label="Gradient type"
+                label={t("Gradient type")}
                 options={[
                   { id: "linear", label: "Linear" },
                   { id: "radial", label: "Radial" },
@@ -228,7 +236,7 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
             {design.gradient.type === "linear" && (
               <Slider
                 id="rotation"
-                label="Angle"
+                label={t("Angle")}
                 value={design.gradient.rotation}
                 min={0}
                 max={360}
@@ -241,8 +249,8 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
         )}
       </Section>
 
-      <Section title="Error correction">
-        <div className="segmented segmented--ec" role="radiogroup" aria-label="Error correction level">
+      <Section title={t("Error correction")}>
+        <div className="segmented segmented--ec" role="radiogroup" aria-label={t("Error correction level")}>
           {ERROR_LEVELS.map((l) => (
             <label key={l.id} className={`segmented__item${design.errorLevel === l.id ? " is-active" : ""}`}>
               <input
@@ -258,22 +266,22 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
           ))}
         </div>
         <p className="muted small">
-          Higher levels survive damage, glare and logos, but make the code denser.
+          {t("Higher levels survive damage, glare and logos, but make the code denser.")}
         </p>
       </Section>
 
-      <Section title="Pattern">
-        <span className="field__label">Modules</span>
-        <Chips label="Module style" options={DOT_STYLES} value={design.dotStyle} onChange={(dotStyle) => onChange({ dotStyle })} />
+      <Section title={t("Pattern")}>
+        <span className="field__label">{t("Modules")}</span>
+        <Chips label={t("Module style")} options={DOT_STYLES} value={design.dotStyle} onChange={(dotStyle) => onChange({ dotStyle })} />
         <div className="grid-2">
           <div>
-            <span className="field__label">Corner frames</span>
-            <Chips label="Corner frame style" options={CORNER_STYLES} value={design.cornerStyle} onChange={(cornerStyle) => onChange({ cornerStyle })} />
+            <span className="field__label">{t("Corner frames")}</span>
+            <Chips label={t("Corner frame style")} options={CORNER_STYLES} value={design.cornerStyle} onChange={(cornerStyle) => onChange({ cornerStyle })} />
           </div>
           <div>
-            <span className="field__label">Corner centres</span>
+            <span className="field__label">{t("Corner centres")}</span>
             <Chips
-              label="Corner centre style"
+              label={t("Corner centre style")}
               options={CORNER_DOT_STYLES}
               value={design.cornerDotStyle}
               onChange={(cornerDotStyle) => onChange({ cornerDotStyle })}
@@ -282,13 +290,13 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
         </div>
       </Section>
 
-      <Section title="Logo">
+      <Section title={t("Logo")}>
         <input
           ref={fileRef}
           type="file"
           accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"
           className="visually-hidden"
-          aria-label="Upload logo"
+          aria-label={t("Upload logo")}
           data-testid="logo-input"
           onChange={(e) => {
             pickLogo(e.target.files?.[0]);
@@ -297,35 +305,35 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
         />
         {design.logo.src ? (
           <div className="logo-row">
-            <img src={design.logo.src} alt="Current logo" className="logo-row__thumb" />
+            <img src={design.logo.src} alt={t("Current logo")} className="logo-row__thumb" />
             <div className="logo-row__meta">
-              <span className="logo-row__title">{design.logo.origin === "site" ? "Website logo" : "Your logo"}</span>
+              <span className="logo-row__title">{design.logo.origin === "site" ? t("Website logo") : t("Your logo")}</span>
               {design.logo.origin === "site" && design.logo.siteDomain && (
                 <span className="muted small" data-testid="logo-source">
-                  Found for {design.logo.siteDomain}
+                  {t("Found for {domain}", { domain: design.logo.siteDomain })}
                 </span>
               )}
             </div>
             <div className="logo-row__actions">
               <button type="button" className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()}>
-                Replace
+                {t("Replace")}
               </button>
               <button type="button" className="btn btn--ghost btn--sm" onClick={() => onLogo(null)}>
-                Remove
+                {t("Remove")}
               </button>
             </div>
           </div>
         ) : (
           <button type="button" className="dropzone" onClick={() => fileRef.current?.click()}>
             <Icon name="upload" />
-            <span>Add a centre logo</span>
-            <span className="muted small">PNG, JPG, SVG · under 2 MB</span>
+            <span>{t("Add a centre logo")}</span>
+            <span className="muted small">{t("PNG, JPG, SVG · under 2 MB")}</span>
           </button>
         )}
         <SiteLogoLine status={siteLogo} hasLogo={!!design.logo.src} onRestore={onRestoreSiteLogo} />
         <label className="check">
           <input type="checkbox" checked={autoLogo} onChange={(e) => onAutoLogo(e.target.checked)} />
-          <span>Use the website's logo for links automatically</span>
+          <span>{t("Use the website's logo for links automatically")}</span>
         </label>
         {logoError && (
           <p className="field__error" role="alert">
@@ -336,7 +344,7 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
           <>
             <Slider
               id="logo-size"
-              label="Logo size"
+              label={t("Logo size")}
               value={Math.round(design.logo.size * 100)}
               min={10}
               max={40}
@@ -350,7 +358,7 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
                 checked={design.logo.hideDots}
                 onChange={(e) => onChange({ logo: { ...design.logo, hideDots: e.target.checked } })}
               />
-              <span>Clear modules behind the logo</span>
+              <span>{t("Clear modules behind the logo")}</span>
             </label>
           </>
         )}

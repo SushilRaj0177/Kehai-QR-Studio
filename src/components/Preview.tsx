@@ -3,6 +3,7 @@ import type { ScanState } from "../hooks/useScanCheck";
 import type { QrDesign } from "../lib/design";
 import type { ReadabilityIssue } from "../lib/readability";
 import { Icon } from "./icons";
+import { useI18n } from "../i18n/I18nContext";
 
 interface Props {
   containerRef: MutableRefObject<HTMLDivElement | null>;
@@ -22,28 +23,29 @@ interface Props {
 }
 
 function ScanBadge({ scan, issues }: { scan: ScanState; issues: ReadabilityIssue[] }) {
+  const { t } = useI18n();
   const hasError = issues.some((i) => i.severity === "error");
   const hasWarn = issues.some((i) => i.severity === "warn");
 
   let tone = "idle";
-  let title = "Waiting for content";
-  let detail = "Fill in the details to generate a code.";
+  let title = t("Waiting for content");
+  let detail = t("Fill in the details to generate a code.");
   if (scan.status === "checking") {
     tone = "checking";
-    title = "Checking scan…";
-    detail = "Decoding the rendered code.";
+    title = t("Checking scan…");
+    detail = t("Decoding the rendered code.");
   } else if (scan.status === "ok") {
     tone = hasError ? "bad" : hasWarn ? "warn" : "good";
-    title = hasError ? "Scans here — risky on phones" : hasWarn ? "Scans, with caveats" : "Scan verified";
-    detail = hasError || hasWarn ? "Decoded correctly, but see the warnings below." : "The rendered code decodes back to your exact content.";
+    title = hasError ? t("Scans here — risky on phones") : hasWarn ? t("Scans, with caveats") : t("Scan verified");
+    detail = hasError || hasWarn ? t("Decoded correctly, but see the warnings below.") : t("The rendered code decodes back to your exact content.");
   } else if (scan.status === "mismatch") {
     tone = "bad";
-    title = "Decodes to the wrong content";
-    detail = "Something in the design is corrupting the data. Try higher error correction.";
+    title = t("Decodes to the wrong content");
+    detail = t("Something in the design is corrupting the data. Try higher error correction.");
   } else if (scan.status === "unreadable") {
     tone = "bad";
-    title = "Won't scan";
-    detail = "The rendered code can't be decoded. Fix the issues below.";
+    title = t("Won't scan");
+    detail = t("The rendered code can't be decoded. Fix the issues below.");
   }
 
   return (
@@ -61,6 +63,7 @@ function ScanBadge({ scan, issues }: { scan: ScanState; issues: ReadabilityIssue
 
 export function Preview(props: Props) {
   const { containerRef, payload, placeholder, design, scan, issues, busy, canCopy, canShare, onShare, onDownload, onCopy, onSave } = props;
+  const { t } = useI18n();
   const disabled = !payload || busy !== null;
 
   return (
@@ -77,18 +80,18 @@ export function Preview(props: Props) {
         )}
       </div>
       <p className="preview__meta">
-        {design.size} × {design.size} px · level {design.errorLevel}
+        {design.size} × {design.size} px · {t("level {level}", { level: design.errorLevel })}
       </p>
 
       <ScanBadge scan={scan} issues={payload ? issues : []} />
 
       {payload && issues.length > 0 && (
-        <ul className="issues" aria-label="Readability warnings">
+        <ul className="issues" aria-label={t("Readability warnings")}>
           {issues.map((i) => (
             <li key={i.id} className={`issue issue--${i.severity}`}>
               <Icon name={i.severity === "error" ? "x" : "alert"} />
               <span>
-                <strong>{i.title}.</strong> {i.detail}
+                <strong>{i.title}{t(".")}</strong> {i.detail}
               </span>
             </li>
           ))}
@@ -97,7 +100,7 @@ export function Preview(props: Props) {
 
       <div className="actions">
         <button type="button" className="btn btn--primary" disabled={disabled} onClick={() => onDownload("png")}>
-          <span>{busy === "png" ? "Preparing…" : "Download PNG"}</span>
+          <span>{busy === "png" ? t("Preparing…") : t("Download PNG")}</span>
           <span className="btn__disc">
             <Icon name="download" />
           </span>
@@ -110,26 +113,26 @@ export function Preview(props: Props) {
             type="button"
             className="btn btn--ghost"
             disabled={disabled || !canCopy}
-            title={canCopy ? undefined : "Your browser can't copy images"}
+            title={canCopy ? undefined : t("Your browser can't copy images")}
             onClick={onCopy}
           >
-            <Icon name="copy" /> Copy
+            <Icon name="copy" /> {t("Copy")}
           </button>
           {canShare && (
             <button type="button" className="btn btn--ghost" disabled={disabled} onClick={onShare}>
-              <Icon name="share" /> Share
+              <Icon name="share" /> {t("Share")}
             </button>
           )}
           <button type="button" className="btn btn--ghost" disabled={disabled} onClick={onSave}>
-            <Icon name="save" /> Save
+            <Icon name="save" /> {t("Save")}
           </button>
         </div>
-        {!payload && <p className="muted small center">Complete the form to enable downloads.</p>}
+        {!payload && <p className="muted small center">{t("Complete the form to enable downloads.")}</p>}
       </div>
 
       {payload && (
         <details className="payload">
-          <summary>Encoded content</summary>
+          <summary>{t("Encoded content")}</summary>
           <code data-testid="payload">{payload}</code>
         </details>
       )}

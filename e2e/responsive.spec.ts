@@ -55,3 +55,18 @@ test("a website logo with a long domain doesn't push the layout sideways", async
     expect(b!.x + b!.width).toBeLessThanOrEqual(panel!.x + panel!.width);
   }
 });
+
+test("Japanese fits a small phone too", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 780 });
+  await stubSiteLogos(page, makeLogoPng());
+  await page.goto("/");
+  await page.getByTestId("lang-toggle").click();
+  await page.getByLabel("ウェブサイトの URL").fill("kotoba-connect-three-engine-web.vercel.app");
+  await expect(page.getByTestId("logo-source")).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+  for (const sel of [".panel--content", ".panel--design", ".panel--preview", ".topbar"]) {
+    const spill = await page.locator(sel).evaluate((el) => el.scrollWidth - el.clientWidth);
+    expect(spill, sel).toBeLessThanOrEqual(0);
+  }
+});
