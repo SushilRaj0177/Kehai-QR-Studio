@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { decodePng, downloadVia, expectScanState, stubSiteLogos } from "./helpers";
+import { decodePng, downloadVia, expectScanState, makeLogoPng, stubSiteLogos } from "./helpers";
 
 // Runs in the "mobile" project (Pixel 7 viewport, touch).
 
@@ -33,5 +33,25 @@ test("all type tabs are reachable on a phone", async ({ page }) => {
   await page.goto("/");
   for (const label of ["URL", "Text", "Email", "Phone", "Wi-Fi"]) {
     await expect(page.getByRole("radiogroup", { name: "QR code type" }).getByText(label, { exact: true })).toBeInViewport();
+  }
+});
+
+test("a website logo with a long domain doesn't push the layout sideways", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 780 }); // a common small Android width
+  await stubSiteLogos(page, makeLogoPng());
+  await page.goto("/");
+  await page.getByLabel("Website URL").fill("kotoba-connect-three-engine-web.vercel.app");
+  await expect(page.getByTestId("logo-source")).toBeVisible();
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+  // The design panel's own content fits inside it (presets, sliders, buttons).
+  const spill = await page.locator(".panel--design").evaluate((el) => el.scrollWidth - el.clientWidth);
+  expect(spill).toBeLessThanOrEqual(0);
+  // Both buttons stay inside the design panel.
+  const panel = await page.locator(".panel--design").boundingBox();
+  for (const name of ["Replace", "Remove"]) {
+    const b = await page.getByRole("button", { name }).boundingBox();
+    expect(b!.x + b!.width).toBeLessThanOrEqual(panel!.x + panel!.width);
   }
 });

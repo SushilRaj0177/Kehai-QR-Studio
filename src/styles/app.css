@@ -336,7 +336,11 @@ code {
   grid-area: recent;
 }
 
+.layout > * {
+  min-width: 0; /* grid items default to min-width:auto and grow with wide content */
+}
 .panel {
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -781,12 +785,15 @@ input[type="range"] {
 .logo-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
+  min-width: 0;
 }
 .logo-row__meta {
   display: grid;
   min-width: 0;
-  flex: 1;
+  flex: 1 1 140px;
+  overflow-wrap: anywhere; /* long domains must wrap, never widen the panel */
 }
 .logo-row__title {
   font-weight: 600;
@@ -794,9 +801,12 @@ input[type="range"] {
 }
 .logo-row__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
+  margin-left: auto;
 }
 .site-logo-line {
+  overflow-wrap: anywhere;
   display: flex;
   align-items: center;
   flex-wrap: wrap;

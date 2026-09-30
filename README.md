@@ -48,8 +48,8 @@ Every point from the task brief, and where it's handled.
 | 6 | **Validation:** validate input, show clear errors | Per-type rules: URL shape and scheme, email address, phone digits (3–15, `+` only at the start), Wi-Fi SSID ≤ 32 bytes, WPA 8–63 chars or 64-hex, WEP 5/13 chars or 10/26 hex, length caps. Errors appear once a field is left, are announced to screen readers, and export stays disabled until the input is valid. |
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
-| 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **76 unit/component tests** (Vitest) plus **26 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **76 unit/component tests** (Vitest) plus **27 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -91,6 +91,10 @@ Paste a link and the Studio finds that website's logo and places it in the centr
 - **Fail silently:** if nothing suitable is found, the code is generated without a logo and the panel says so.
 
 ---
+
+### Layout fix: long domains in the logo row
+
+On narrow phones (about 360 px), a website logo found for a long domain (e.g. `kotoba-connect-three.vercel.app`) made the whole Design panel spill past the right edge (presets, sliders and inputs were cut off). Cause: the logo row's Replace/Remove buttons couldn't shrink, and grid/flex items default to `min-width: auto`, so the row forced the panel wider than the screen. Fix: the row wraps, the domain text wraps anywhere, and panels and layout cells have `min-width: 0`. A Playwright test at 360 px guards it.
 
 ## Scan reliability, in detail
 
@@ -201,7 +205,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 76 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 26 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 27 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 
