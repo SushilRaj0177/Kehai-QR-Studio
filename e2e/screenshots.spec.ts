@@ -1,5 +1,5 @@
 import { test, type Page } from "@playwright/test";
-import { expectScanState, pickKind } from "./helpers";
+import { expectScanState, makeLogoPng, pickKind, stubSiteLogos } from "./helpers";
 
 /**
  * Generates the README screenshots (docs/screenshots). Run with:
@@ -10,8 +10,9 @@ const OUT = "docs/screenshots";
 test.describe.configure({ mode: "serial" });
 test.use({ deviceScaleFactor: 2 });
 
-async function open(page: Page, theme: "dark" | "light", width = 1440, height = 1000) {
+async function open(page: Page, theme: "dark" | "light", width = 1440, height = 1000, withSiteLogos = false) {
   await page.setViewportSize({ width, height });
+  await stubSiteLogos(page, withSiteLogos ? makeLogoPng([34, 226, 245]) : undefined);
   await page.addInitScript((t) => localStorage.setItem("kqs.theme", t), theme);
   await page.goto("/");
   await page.evaluate(() => document.fonts.ready);
@@ -120,4 +121,16 @@ test("mobile", async ({ page }) => {
   await page.getByTestId("preview-stage").scrollIntoViewIfNeeded();
   await page.evaluate(() => window.scrollBy(0, -90));
   await page.screenshot({ path: `${OUT}/mobile-preview.png` });
+});
+
+test("website logo detected automatically", async ({ page }) => {
+  await open(page, "dark", 1440, 1000, true);
+  await page.getByLabel("Website URL").fill("kehai-engine-web.vercel.app");
+  await page.getByRole("button", { name: /Kehai Cyan/ }).click();
+  await page.getByTestId("logo-source").waitFor();
+  await expectScanState(page, "good");
+  await page.waitForTimeout(3500); // let the toast fade
+  await forElementShot(page);
+  await page.locator(".panel--preview").screenshot({ path: `${OUT}/site-logo.png` });
+  await page.locator(".design-section", { hasText: "Logo" }).last().screenshot({ path: `${OUT}/site-logo-controls.png` });
 });

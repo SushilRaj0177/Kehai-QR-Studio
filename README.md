@@ -5,7 +5,7 @@
 **Design QR codes that actually scan.**
 
 A browser-only QR code generator and designer for links, text, email, phone numbers and Wi-Fi.
-It verifies every design live by decoding the exact image you're about to download.
+It verifies every design live by decoding the exact image you're about to download, and puts a link's own website logo in the centre automatically.
 
 **[Live demo → kehai-qr-studio.vercel.app](https://kehai-qr-studio.vercel.app)**
 
@@ -49,9 +49,38 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **62 unit/component tests** (Vitest) plus **16 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **76 unit/component tests** (Vitest) plus **22 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard · ✅ custom module and corner patterns · ✅ dark / light theme.
+
+**Extra:** ✨ **automatic website logos** for URL codes (see below).
+
+---
+
+## Automatic website logos
+
+Paste a link and the Studio finds that website's logo and places it in the centre of the code, with no extra steps.
+
+<p align="center"><img src="docs/screenshots/site-logo.png" alt="A URL code with the website's logo placed automatically" width="340"> <img src="docs/screenshots/site-logo-controls.png" alt="Logo controls: website logo, replace, remove, auto toggle" width="480"></p>
+
+**How it works** (`src/lib/siteLogo.ts`, `src/hooks/useSiteLogo.ts`):
+
+1. **Wait for the link to settle.** Once the URL is valid and typing pauses (700 ms), the Studio takes its domain (e.g. `gdg.community.dev`).
+2. **Ask public favicon services for its icon.** A browser can't read another site's HTML (CORS), and there's no backend, so the Studio asks public favicon services instead: Google's favicon service, then icon.horse, then DuckDuckGo. **Only the domain is sent**, never the path or query.
+3. **Accept only safe, sharp images.** An image is used only if it:
+   - arrives **with CORS headers** (otherwise drawing it would taint the canvas and break downloads and the scan check);
+   - is a real image;
+   - is at least **32 px** (tiny favicons look blurry when enlarged).
+4. **Store it locally.** It's redrawn onto a 256 px canvas and stored as a **data: URL**, so exports and saved history never depend on the network again. Each domain is looked up once per visit.
+5. **Keep the code scannable.** Adding it raises error correction to **High** (just like an uploaded logo), and the live scan check verifies the result.
+
+**You stay in control:**
+
+- **Remove:** the logo stays off for that site, and a one-click **"Use it again"** brings it back.
+- **Replace:** upload your own logo. An uploaded logo always wins and is never overwritten by lookups.
+- **Change site or type:** another site swaps in its logo; switching to a non-URL type clears it.
+- **Turn it off:** a toggle, "Use the website's logo for links automatically", is remembered between visits. With it off, no lookup is ever made.
+- **Fail silently:** if nothing suitable is found, the code is generated without a logo and the panel says so.
 
 ---
 
@@ -119,11 +148,13 @@ src/
 │   ├── readability.ts      Contrast maths, geometry, readability rules
 │   ├── scanCheck.ts        Decode rendered pixels with jsQR and compare with the payload
 │   ├── history.ts          Recent-codes persistence (validation, de-dup, quota handling)
+│   ├── siteLogo.ts         Website-logo lookup: domain extraction, favicon services, CORS/size checks
 │   └── exporting.ts        Download, clipboard, thumbnails, file names
 ├── hooks/
 │   ├── useQrRenderer.ts    Owns the single renderer instance (preview = export)
 │   ├── useScanCheck.ts     Debounced live verification
 │   ├── useRecent.ts        History state, synced across tabs
+│   ├── useSiteLogo.ts      Auto-adds/removes the link's website logo; remove/restore/toggle
 │   └── useTheme.ts         Dark/light theme, persisted, no flash on load
 ├── components/             ContentForm, DesignPanel, Preview, RecentList, KehaiCallout, …
 └── App.tsx                 State wiring
@@ -133,7 +164,7 @@ e2e/                        Playwright: behaviour, responsive layout, README scr
 **Data flow:** `fields → validate() → encode() → payload`, then `payload + design` feeds three things: the **renderer** (preview and export), **analyze()** (warnings) and **verifyScan()** (badge).
 There is one source of truth for the design, so the preview, the downloaded PNG and the SVG can't drift apart.
 
-**No backend.** Everything runs in the browser, and the app makes no network requests after loading. Fonts are bundled rather than loaded from Google Fonts, and only the three kanji subsets it actually uses are shipped.
+**No backend.** Everything runs in the browser. Fonts are bundled rather than loaded from Google Fonts, and only the three kanji subsets the app actually uses are shipped. The **only** outside request is the optional website-logo lookup: it sends the link's domain name to a public favicon service, and it can be switched off.
 
 ---
 
@@ -161,8 +192,8 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 62 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 16 end-to-end tests in Chromium (desktop + Pixel 7)
+npm test             # 76 unit + component tests (Vitest, jsdom)
+npm run test:e2e     # 22 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 
@@ -175,6 +206,13 @@ What the end-to-end suite verifies, in a real browser:
 - A **logo** raises error correction and still scans. **SVG export** is a valid SVG document.
 - **Recent codes survive a reload** and restore type, content and preset. Removing and clearing work.
 - The **theme** persists. On a **phone** there's no horizontal scrolling, the preview sits under the form, and all tabs are reachable.
+- **Website logos:** the favicon services are stubbed with a generated image, so the tests never depend on the internet. The tests cover:
+  - a link gets its site's logo automatically (verified in the centre pixel of the download), and the code still decodes;
+  - only the domain is sent;
+  - remove, "Use it again" and upload/replace work, and an upload is never overwritten;
+  - another site swaps the logo, and a non-URL type clears it;
+  - missing or too-small icons mean no logo;
+  - the off switch is remembered and makes no requests at all.
 
 ---
 
