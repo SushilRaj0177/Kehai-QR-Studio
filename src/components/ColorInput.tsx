@@ -16,7 +16,12 @@ interface Props {
 /** Native colour picker paired with an editable hex field. */
 export function ColorInput({ id, label, value, onChange }: Props) {
   const [text, setText] = useState(value);
-  useEffect(() => setText(value), [value]);
+  // Sync from outside (preset, swap, picker) — but not while the text
+  // already represents this colour, or typing "#123456" would be
+  // clobbered to "#112233" the moment "#123" became valid.
+  useEffect(() => {
+    setText((t) => (HEX.test(t.trim()) && expand(t.trim().toLowerCase()) === value.toLowerCase() ? t : value));
+  }, [value]);
   const invalid = !HEX.test(text.trim());
 
   return (
