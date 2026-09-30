@@ -41,7 +41,7 @@ Every point from the task brief, and where it's handled.
 | # | Requirement | Implementation |
 |---|---|---|
 | 1 | **Generation:** enter a URL or text, generate in real time, show a preview | The preview re-renders on every keystroke (`useQrRenderer`). URLs without a scheme get `https://` added, and the hint shows the final link. |
-| 2 | **Types:** URL, plain text, email, phone, Wi-Fi, with the right inputs per type | All five, plus a sixth: **Contact** (a vCard 3.0 card: name, phone, email, organisation, website; phones offer "Add to contacts", with RFC 2426 escaping and the name split into family/given). Six type tabs, each showing only its own fields (`ContentForm`). Encoders in `src/lib/qrTypes.ts`: `mailto:` with encoded subject/body, `tel:` normalised to E.164 digits, and the `WIFI:T:…;S:…;P:…;H:…;;` format with correct escaping of `; , : " \`. |
+| 2 | **Types:** URL, plain text, email, phone, Wi-Fi, with the right inputs per type | All five, plus a sixth: **Contact** (a vCard 3.0 card: the **phone number is required**, and name, email, organisation and website are optional; without a name the card is named after the number, since vCard needs a display name; phones offer "Add to contacts", with RFC 2426 escaping and the name split into family/given). Six type tabs, each showing only its own fields (`ContentForm`). Encoders in `src/lib/qrTypes.ts`: `mailto:` with encoded subject/body, `tel:` normalised to E.164 digits, and the `WIFI:T:…;S:…;P:…;H:…;;` format with correct escaping of `; , : " \`. |
 | 3 | **Customisation:** size, foreground/background, error correction, margin, instant updates | Size 128–1024 px, code and background colours (picker + hex), L/M/Q/H error correction, and margin in *modules* (see design decisions). Every control updates the preview immediately. |
 | 4 | **Presets:** predefined visual presets, editable afterwards | Six presets (Classic, Torii, Kehai Cyan, Print-safe, Sakura, Sumi Ink). A preset only sets appearance and every control stays editable. The panel shows when you've drifted to "Custom". |
 | 5 | **Download:** PNG that matches the preview | The preview canvas and the download come from the **same renderer instance**. An end-to-end test asserts the downloaded PNG is **pixel-identical** to the preview canvas. |
@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **87 unit/component tests** (Vitest) plus **40 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **87 unit/component tests** (Vitest) plus **41 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -245,7 +245,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 87 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 40 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 41 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 

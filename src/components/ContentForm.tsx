@@ -244,7 +244,7 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
 
         {kind === "contact" && (
           <>
-            <Field id="contact-name" label={t("Name")} error={err("name")} hint={t("Scanning offers “Add to contacts”.")}>
+            <Field id="contact-name" label={t("Name")} optional error={err("name")}>
               {(d) => (
                 <input
                   id="contact-name"
@@ -261,7 +261,7 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
               )}
             </Field>
             <div className="grid-2">
-              <Field id="contact-phone" label={t("Phone")} optional error={err("phone")}>
+              <Field id="contact-phone" label={t("Phone number")} error={err("phone")} hint={t("Scanning offers “Add to contacts”.")}>
                 {(d) => (
                   <input
                     id="contact-phone"

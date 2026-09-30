@@ -27,7 +27,7 @@ const PLACEHOLDERS: Record<QrKind, string> = {
   email: "Add a recipient to see your code.",
   phone: "Enter a number to see your code.",
   wifi: "Enter your network details to see your code.",
-  contact: "Enter a name to see your code.",
+  contact: "Enter a phone number to see your code.",
 };
 
 export default function App() {

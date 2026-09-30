@@ -44,7 +44,7 @@ const dataKeys = [
   "Add a recipient to see your code.",
   "Enter a number to see your code.",
   "Enter your network details to see your code.",
-  "Enter a name to see your code.",
+  "Enter a phone number to see your code.",
 ];
 
 const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();

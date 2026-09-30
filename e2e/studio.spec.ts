@@ -297,3 +297,19 @@ test("camera stress test: a clean code passes, a risky one fails", async ({ page
   await page.getByLabel("Text", { exact: true }).fill("x".repeat(400));
   await expect(page.getByTestId("stress").locator('[data-id="small"]')).toHaveAttribute("data-pass", "false");
 });
+
+test("a contact needs a phone number; everything else is optional", async ({ page }) => {
+  await pickKind(page, "Contact");
+  await page.locator("#contact-name").fill("Sushil Raj");
+  await page.locator("#contact-phone").focus();
+  await page.locator("#contact-phone").blur();
+  await expect(page.getByText("Enter a phone number.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Download PNG/ })).toBeDisabled();
+
+  await page.locator("#contact-name").fill("");
+  await page.locator("#contact-phone").fill("+91 98765 43210");
+  await expectScanState(page, "good");
+  const file = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+  expect(file.text).toContain("FN:+919876543210");
+  expect(file.text).toContain("TEL;TYPE=CELL:+919876543210");
+});

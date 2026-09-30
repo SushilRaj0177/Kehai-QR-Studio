@@ -147,9 +147,9 @@ describe("encode()", () => {
 
 describe("contact (vCard)", () => {
   const base = { name: "Sushil Raj", org: "", phone: "", email: "", url: "" };
-  it("needs only a name", () => {
-    expect(validateContact({ ...base, name: " " })).toHaveProperty("name");
-    expect(validateContact(base)).toEqual({});
+  it("needs only a phone number", () => {
+    expect(validateContact({ ...base, phone: "" })).toHaveProperty("phone");
+    expect(validateContact({ ...base, name: "", phone: "+91 98765 43210" })).toEqual({});
   });
   it("validates optional fields only when filled", () => {
     const e = validateContact({ ...base, phone: "12", email: "nope", url: "not a url" });
@@ -169,6 +169,8 @@ describe("contact (vCard)", () => {
         "END:VCARD",
       ].join("\r\n"),
     );
-    expect(encodeContact({ ...base, name: "Cher" })).toContain("N:;Cher;;;");
+    expect(encodeContact({ ...base, name: "Cher", phone: "123" })).toContain("N:;Cher;;;");
+    // No name: the card is named after the number.
+    expect(encodeContact({ ...base, name: "", phone: "+91 98765 43210" })).toContain("FN:+919876543210");
   });
 });

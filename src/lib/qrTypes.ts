@@ -203,13 +203,11 @@ export function encodeWifi(f: WifiFields): string {
 
 export function validateContact(f: ContactFields, t: Translate = en): FieldErrors {
   const errors: FieldErrors = {};
-  if (!f.name.trim()) errors.name = t("Enter a name.");
-  else if (f.name.length > 100) errors.name = t("Keep the name under 100 characters.");
+  // The phone number is the one required field; everything else is optional.
+  const phone = validatePhone({ phone: f.phone }, t).phone;
+  if (phone) errors.phone = phone;
+  if (f.name.length > 100) errors.name = t("Keep the name under 100 characters.");
   if (f.org.length > 100) errors.org = t("Keep the organisation under 100 characters.");
-  if (f.phone.trim()) {
-    const e = validatePhone({ phone: f.phone }, t).phone;
-    if (e) errors.phone = e;
-  }
   if (f.email.trim() && !EMAIL_RE.test(f.email.trim())) errors.email = t("That email address isn't valid.");
   if (f.url.trim()) {
     const e = validateUrl({ url: f.url }, t).url;
@@ -226,12 +224,14 @@ export function escapeVcard(value: string): string {
 /** A vCard 3.0 card: phones offer "Add to contacts" when they scan it. */
 export function encodeContact(f: ContactFields): string {
   const name = f.name.trim().replace(/\s+/g, " ");
-  const parts = name.split(" ");
+  const parts = name ? name.split(" ") : [];
   const family = parts.length > 1 ? parts.pop()! : "";
   const given = parts.join(" ");
-  const lines = ["BEGIN:VCARD", "VERSION:3.0", `N:${escapeVcard(family)};${escapeVcard(given)};;;`, `FN:${escapeVcard(name)}`];
+  // vCard requires a display name (FN): without a name, use the number.
+  const display = name || normalizePhone(f.phone);
+  const lines = ["BEGIN:VCARD", "VERSION:3.0", `N:${escapeVcard(family)};${escapeVcard(given)};;;`, `FN:${escapeVcard(display)}`];
   if (f.org.trim()) lines.push(`ORG:${escapeVcard(f.org.trim())}`);
-  if (f.phone.trim()) lines.push(`TEL;TYPE=CELL:${normalizePhone(f.phone)}`);
+  lines.push(`TEL;TYPE=CELL:${normalizePhone(f.phone)}`);
   if (f.email.trim()) lines.push(`EMAIL:${f.email.trim()}`);
   if (f.url.trim()) lines.push(`URL:${normalizeUrl(f.url)}`);
   lines.push("END:VCARD");
@@ -294,7 +294,7 @@ export function describe<K extends QrKind>(kind: K, fields: FieldsByKind[K]): st
     case "wifi":
       return (fields as WifiFields).ssid;
     case "contact":
-      return (fields as ContactFields).name.trim();
+      return (fields as ContactFields).name.trim() || (fields as ContactFields).phone.trim();
     default:
       return "";
   }
