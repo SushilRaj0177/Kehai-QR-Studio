@@ -241,6 +241,97 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
             </label>
           </>
         )}
+
+        {kind === "contact" && (
+          <>
+            <Field id="contact-name" label={t("Name")} error={err("name")} hint={t("Scanning offers “Add to contacts”.")}>
+              {(d) => (
+                <input
+                  id="contact-name"
+                  className="input"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Sushil Raj"
+                  value={fields.contact.name}
+                  aria-invalid={!!err("name")}
+                  aria-describedby={d}
+                  onChange={(e) => onChange("contact", { name: e.target.value })}
+                  onBlur={() => onTouch("name")}
+                />
+              )}
+            </Field>
+            <div className="grid-2">
+              <Field id="contact-phone" label={t("Phone")} optional error={err("phone")}>
+                {(d) => (
+                  <input
+                    id="contact-phone"
+                    className="input"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="+91 98765 43210"
+                    value={fields.contact.phone}
+                    aria-invalid={!!err("phone")}
+                    aria-describedby={d}
+                    onChange={(e) => onChange("contact", { phone: e.target.value })}
+                    onBlur={() => onTouch("phone")}
+                  />
+                )}
+              </Field>
+              <Field id="contact-email" label={t("Email")} optional error={err("email")}>
+                {(d) => (
+                  <input
+                    id="contact-email"
+                    className="input"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={fields.contact.email}
+                    aria-invalid={!!err("email")}
+                    aria-describedby={d}
+                    onChange={(e) => onChange("contact", { email: e.target.value })}
+                    onBlur={() => onTouch("email")}
+                  />
+                )}
+              </Field>
+              <Field id="contact-org" label={t("Organisation")} optional error={err("org")}>
+                {(d) => (
+                  <input
+                    id="contact-org"
+                    className="input"
+                    type="text"
+                    autoComplete="organization"
+                    placeholder="GDG on Campus SRM"
+                    value={fields.contact.org}
+                    aria-invalid={!!err("org")}
+                    aria-describedby={d}
+                    onChange={(e) => onChange("contact", { org: e.target.value })}
+                    onBlur={() => onTouch("org")}
+                  />
+                )}
+              </Field>
+              <Field id="contact-url" label={t("Website")} optional error={err("url")}>
+                {(d) => (
+                  <input
+                    id="contact-url"
+                    className="input"
+                    type="text"
+                    inputMode="url"
+                    autoComplete="url"
+                    spellCheck={false}
+                    placeholder="github.com/you"
+                    value={fields.contact.url}
+                    aria-invalid={!!err("url")}
+                    aria-describedby={d}
+                    onChange={(e) => onChange("contact", { url: e.target.value })}
+                    onBlur={() => onTouch("url")}
+                  />
+                )}
+              </Field>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

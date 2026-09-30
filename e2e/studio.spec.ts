@@ -42,6 +42,16 @@ test.describe("every QR type generates, downloads and scans back correctly", () 
       },
       expected: 'WIFI:T:WPA;S:GDG\\;Guest;P:pa\\:ss\\,w\\"rd;H:true;;',
     },
+    {
+      kind: "Contact",
+      fill: async (p) => {
+        await p.locator("#contact-name").fill("Sushil Raj");
+        await p.locator("#contact-phone").fill("+91 98765 43210");
+        await p.locator("#contact-email").fill("sushil@example.com");
+        await p.locator("#contact-org").fill("GDG on Campus SRM");
+      },
+      expected: "BEGIN:VCARD\r\nVERSION:3.0\r\nN:Raj;Sushil;;;\r\nFN:Sushil Raj\r\nORG:GDG on Campus SRM\r\nTEL;TYPE=CELL:+919876543210\r\nEMAIL:sushil@example.com\r\nEND:VCARD",
+    },
   ];
 
   for (const c of cases) {

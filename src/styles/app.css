@@ -416,7 +416,7 @@ html[lang="ja"] .kind-tab__label {
 
 .kind-tabs {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 18px;
 }
@@ -1442,7 +1442,7 @@ input[type="range"] {
     border-radius: 18px;
   }
   .kind-tabs {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 2 rows of 3 on phones */
     gap: 6px;
   }
   .kind-tab {

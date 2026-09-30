@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  encodeContact,
+  validateContact,
   encode,
   encodeWifi,
   escapeWifi,
@@ -140,5 +142,33 @@ describe("encode()", () => {
   it("detects untouched forms", () => {
     expect(isEmpty("email", { address: "", subject: "", body: "" })).toBe(true);
     expect(isEmpty("email", { address: "", subject: "Hi", body: "" })).toBe(false);
+  });
+});
+
+describe("contact (vCard)", () => {
+  const base = { name: "Sushil Raj", org: "", phone: "", email: "", url: "" };
+  it("needs only a name", () => {
+    expect(validateContact({ ...base, name: " " })).toHaveProperty("name");
+    expect(validateContact(base)).toEqual({});
+  });
+  it("validates optional fields only when filled", () => {
+    const e = validateContact({ ...base, phone: "12", email: "nope", url: "not a url" });
+    expect(Object.keys(e).sort()).toEqual(["email", "phone", "url"]);
+  });
+  it("encodes a vCard 3.0 with split name, normalised phone and escaping", () => {
+    expect(encodeContact({ name: "Sushil  Raj", org: "GDG; SRM, Chennai", phone: "+91 98765-43210", email: "a@b.co", url: "kehai.dev" })).toBe(
+      [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        "N:Raj;Sushil;;;",
+        "FN:Sushil Raj",
+        "ORG:GDG\\; SRM\\, Chennai",
+        "TEL;TYPE=CELL:+919876543210",
+        "EMAIL:a@b.co",
+        "URL:https://kehai.dev",
+        "END:VCARD",
+      ].join("\r\n"),
+    );
+    expect(encodeContact({ ...base, name: "Cher" })).toContain("N:;Cher;;;");
   });
 });

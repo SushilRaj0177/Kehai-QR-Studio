@@ -31,7 +31,7 @@ test("works on a phone: no sideways scrolling, preview right under the form", as
 
 test("all type tabs are reachable on a phone", async ({ page }) => {
   await page.goto("/");
-  for (const label of ["URL", "Text", "Email", "Phone", "Wi-Fi"]) {
+  for (const label of ["URL", "Text", "Email", "Phone", "Wi-Fi", "Contact"]) {
     await expect(page.getByRole("radiogroup", { name: "QR code type" }).getByText(label, { exact: true })).toBeInViewport();
   }
 });

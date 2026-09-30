@@ -26,6 +26,7 @@ const PLACEHOLDERS: Record<QrKind, string> = {
   email: "Add a recipient to see your code.",
   phone: "Enter a number to see your code.",
   wifi: "Enter your network details to see your code.",
+  contact: "Enter a name to see your code.",
 };
 
 export default function App() {
@@ -284,7 +285,7 @@ export default function App() {
         <h1>{rich(t("Design QR codes that {accent}"), { accent: <span className="accent">{t("actually scan.")}</span> })}</h1>
         <p className="hero__sub">
           {t(
-            "Links, text, email, phone and Wi-Fi — styled your way, verified live by decoding the exact image you'll download. Runs entirely in your browser.",
+            "Links, text, email, phone, Wi-Fi and contact cards — styled your way, verified live by decoding the exact image you'll download. Runs entirely in your browser.",
           )}
         </p>
       </section>

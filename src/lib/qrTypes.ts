@@ -7,7 +7,7 @@
  */
 import { en, type Translate } from "../i18n/i18n";
 
-export type QrKind = "url" | "text" | "email" | "phone" | "wifi";
+export type QrKind = "url" | "text" | "email" | "phone" | "wifi" | "contact";
 
 export type WifiSecurity = "WPA" | "WEP" | "nopass";
 
@@ -32,12 +32,21 @@ export interface WifiFields {
   hidden: boolean;
 }
 
+export interface ContactFields {
+  name: string;
+  org: string;
+  phone: string;
+  email: string;
+  url: string;
+}
+
 export interface FieldsByKind {
   url: UrlFields;
   text: TextFields;
   email: EmailFields;
   phone: PhoneFields;
   wifi: WifiFields;
+  contact: ContactFields;
 }
 
 /** Every kind's current field values, so switching tabs never loses input. */
@@ -52,6 +61,7 @@ export const KINDS: { id: QrKind; label: string; hint: string }[] = [
   { id: "email", label: "Email", hint: "Draft an email" },
   { id: "phone", label: "Phone", hint: "Start a call" },
   { id: "wifi", label: "Wi-Fi", hint: "Join a network" },
+  { id: "contact", label: "Contact", hint: "Save a contact" },
 ];
 
 export const DEFAULT_FIELDS: AllFields = {
@@ -60,6 +70,7 @@ export const DEFAULT_FIELDS: AllFields = {
   email: { address: "", subject: "", body: "" },
   phone: { phone: "" },
   wifi: { ssid: "", password: "", security: "WPA", hidden: false },
+  contact: { name: "", org: "", phone: "", email: "", url: "" },
 };
 
 /** Upper bound on payload size. A version-40 code at level L holds 2,953
@@ -188,6 +199,45 @@ export function encodeWifi(f: WifiFields): string {
   return `WIFI:${parts.join(";")};;`;
 }
 
+// ---------------------------------------------------------------- Contact (vCard)
+
+export function validateContact(f: ContactFields, t: Translate = en): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!f.name.trim()) errors.name = t("Enter a name.");
+  else if (f.name.length > 100) errors.name = t("Keep the name under 100 characters.");
+  if (f.org.length > 100) errors.org = t("Keep the organisation under 100 characters.");
+  if (f.phone.trim()) {
+    const e = validatePhone({ phone: f.phone }, t).phone;
+    if (e) errors.phone = e;
+  }
+  if (f.email.trim() && !EMAIL_RE.test(f.email.trim())) errors.email = t("That email address isn't valid.");
+  if (f.url.trim()) {
+    const e = validateUrl({ url: f.url }, t).url;
+    if (e) errors.url = e;
+  }
+  return errors;
+}
+
+/** vCard text values escape \ , ; and newlines (RFC 2426 §4). */
+export function escapeVcard(value: string): string {
+  return value.replace(/([\\,;])/g, "\\$1").replace(/\r?\n/g, "\\n");
+}
+
+/** A vCard 3.0 card: phones offer "Add to contacts" when they scan it. */
+export function encodeContact(f: ContactFields): string {
+  const name = f.name.trim().replace(/\s+/g, " ");
+  const parts = name.split(" ");
+  const family = parts.length > 1 ? parts.pop()! : "";
+  const given = parts.join(" ");
+  const lines = ["BEGIN:VCARD", "VERSION:3.0", `N:${escapeVcard(family)};${escapeVcard(given)};;;`, `FN:${escapeVcard(name)}`];
+  if (f.org.trim()) lines.push(`ORG:${escapeVcard(f.org.trim())}`);
+  if (f.phone.trim()) lines.push(`TEL;TYPE=CELL:${normalizePhone(f.phone)}`);
+  if (f.email.trim()) lines.push(`EMAIL:${f.email.trim()}`);
+  if (f.url.trim()) lines.push(`URL:${normalizeUrl(f.url)}`);
+  lines.push("END:VCARD");
+  return lines.join("\r\n");
+}
+
 // ---------------------------------------------------------------- dispatch
 
 export function validate<K extends QrKind>(kind: K, fields: FieldsByKind[K], t: Translate = en): FieldErrors {
@@ -202,6 +252,8 @@ export function validate<K extends QrKind>(kind: K, fields: FieldsByKind[K], t: 
       return validatePhone(fields as PhoneFields, t);
     case "wifi":
       return validateWifi(fields as WifiFields, t);
+    case "contact":
+      return validateContact(fields as ContactFields, t);
     default:
       return {};
   }
@@ -221,6 +273,8 @@ export function encode<K extends QrKind>(kind: K, fields: FieldsByKind[K]): stri
       return `tel:${normalizePhone((fields as PhoneFields).phone)}`;
     case "wifi":
       return encodeWifi(fields as WifiFields);
+    case "contact":
+      return encodeContact(fields as ContactFields);
     default:
       return null;
   }
@@ -239,6 +293,8 @@ export function describe<K extends QrKind>(kind: K, fields: FieldsByKind[K]): st
       return (fields as PhoneFields).phone.trim();
     case "wifi":
       return (fields as WifiFields).ssid;
+    case "contact":
+      return (fields as ContactFields).name.trim();
     default:
       return "";
   }
@@ -261,6 +317,8 @@ export function isEmpty<K extends QrKind>(kind: K, fields: FieldsByKind[K]): boo
       const w = fields as WifiFields;
       return !w.ssid && !w.password;
     }
+    case "contact":
+      return !Object.values(fields as ContactFields).some((v) => v.trim());
     default:
       return true;
   }

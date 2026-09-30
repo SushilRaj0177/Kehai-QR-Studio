@@ -30,6 +30,14 @@ export function KindIcon({ kind }: { kind: QrKind }) {
           <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
         </svg>
       );
+    case "contact":
+      return (
+        <svg {...base}>
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <circle cx="9" cy="10" r="2.2" />
+          <path d="M5.5 16a3.5 3.5 0 0 1 7 0M15 9h3M15 13h3" />
+        </svg>
+      );
     case "wifi":
       return (
         <svg {...base}>
