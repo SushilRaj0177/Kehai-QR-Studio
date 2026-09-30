@@ -2,6 +2,7 @@ import type { MutableRefObject } from "react";
 import type { ScanState } from "../hooks/useScanCheck";
 import type { QrDesign } from "../lib/design";
 import type { ReadabilityIssue } from "../lib/readability";
+import type { StressId, StressResult } from "../lib/scanCheck";
 import { Icon } from "./icons";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -62,6 +63,31 @@ function ScanBadge({ scan, issues }: { scan: ScanState; issues: ReadabilityIssue
   );
 }
 
+const STRESS: { id: StressId; label: string; hint: string }[] = [
+  { id: "small", label: "Small", hint: "Seen at 120 px, like a small print from arm's length" },
+  { id: "blur", label: "Blurry", hint: "Slightly out of focus" },
+  { id: "dim", label: "Dim light", hint: "Contrast crushed, like a dark room" },
+];
+
+function StressChips({ stress }: { stress: StressResult }) {
+  const { t } = useI18n();
+  const passed = STRESS.filter((s) => stress[s.id]).length;
+  return (
+    <div className="stress" data-testid="stress" data-passed={passed}>
+      <span className="stress__label">{t("Camera stress test")}</span>
+      <ul className="stress__list">
+        {STRESS.map((s) => (
+          <li key={s.id} className={`stress__chip${stress[s.id] ? " is-pass" : " is-fail"}`} title={t(s.hint)} data-id={s.id} data-pass={stress[s.id]}>
+            <Icon name={stress[s.id] ? "check" : "x"} />
+            {t(s.label)}
+            <span className="visually-hidden">{stress[s.id] ? t("passed") : t("failed")}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function Preview(props: Props) {
   const { containerRef, payload, placeholder, design, scan, issues, busy, canCopy, canShare, onShare, onDownload, onCopy, onSave, onCopyLink } = props;
   const { t } = useI18n();
@@ -85,6 +111,7 @@ export function Preview(props: Props) {
       </p>
 
       <ScanBadge scan={scan} issues={payload ? issues : []} />
+      {payload && scan.status === "ok" && scan.stress && <StressChips stress={scan.stress} />}
 
       {payload && issues.length > 0 && (
         <ul className="issues" aria-label={t("Readability warnings")}>

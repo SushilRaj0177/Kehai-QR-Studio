@@ -281,3 +281,19 @@ test.describe("design links", () => {
     expect(Buffer.compare(copy.data, original.data)).toBe(0); // same pixels
   });
 });
+
+test("camera stress test: a clean code passes, a risky one fails", async ({ page }) => {
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  await expect(page.getByTestId("stress")).toHaveAttribute("data-passed", "3");
+
+  // Grey on white still decodes as a perfect image, but not in dim light.
+  await page.locator("#fg-hex").fill("#9a9a9a");
+  await expect(page.getByTestId("stress").locator('[data-id="dim"]')).toHaveAttribute("data-pass", "false");
+
+  // Long content at a small size: too dense to read at 120 px.
+  await page.locator("#fg-hex").fill("#0a0e14");
+  await pickKind(page, "Text");
+  await page.getByLabel("Text", { exact: true }).fill("x".repeat(400));
+  await expect(page.getByTestId("stress").locator('[data-id="small"]')).toHaveAttribute("data-pass", "false");
+});

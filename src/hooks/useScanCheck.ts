@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { QrDesign } from "../lib/design";
-import type { ScanResult } from "../lib/scanCheck";
+import type { ScanResult, StressResult } from "../lib/scanCheck";
 
 // The decoder (jsQR, ~130 kB) isn't needed to draw the page, so it lives in
 // its own chunk. Loading starts as soon as this module runs, in parallel
@@ -9,7 +9,7 @@ let decoder: Promise<typeof import("../lib/scanCheck")> | null = null;
 const loadDecoder = () => (decoder ??= import("../lib/scanCheck"));
 if (typeof window !== "undefined") queueMicrotask(() => void loadDecoder().catch(() => (decoder = null)));
 
-export type ScanState = ScanResult | { status: "checking" } | { status: "idle" };
+export type ScanState = (ScanResult & { stress?: StressResult }) | { status: "checking" } | { status: "idle" };
 
 /**
  * Decodes the rendered code shortly after every change (debounced so
@@ -35,9 +35,15 @@ export function useScanCheck(
       try {
         const blob = await getBlob("png");
         if (cancelled || !blob) return;
-        const { verifyScan } = await loadDecoder();
+        const { verifyScan, stressTest } = await loadDecoder();
         const result = await verifyScan(blob, payload);
-        if (!cancelled) setState(result);
+        if (cancelled) return;
+        setState(result);
+        // Only worth stress-testing a code that decodes in the first place.
+        if (result.status === "ok") {
+          const stress = await stressTest(blob, payload);
+          if (!cancelled) setState({ ...result, stress });
+        }
       } catch {
         if (!cancelled) setState({ status: "unreadable" });
       }

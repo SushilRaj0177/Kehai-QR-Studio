@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **87 unit/component tests** (Vitest) plus **39 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **87 unit/component tests** (Vitest) plus **40 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -133,6 +133,16 @@ Decoding runs with inversion **off**, because most camera apps don't retry with 
 | ✅ **Scan verified** | Decodes to exactly your content and no readability rule is triggered |
 | ⚠️ **Scans, with caveats** | Decodes correctly, but the design breaks a rule of thumb for real cameras |
 | ❌ **Won't scan** / **Decodes to the wrong content** | The rendered image doesn't decode, or decodes to something else |
+
+### 1b. Camera stress test
+
+A perfect digital decode proves the data is right, but a phone camera is harsher. Once a code decodes, it's decoded three more times under simulated camera conditions, and the results show as chips under the badge:
+
+- **Small:** scaled to 120 px, like a small print seen from arm's length;
+- **Blurry:** 240 px with a 1.2 px blur (missed focus, hand shake);
+- **Dim light:** 240 px with the contrast crushed towards grey.
+
+All six presets pass all three. Grey-on-white fails *Dim light*, and a 400-character text at 320 px fails *Small*, even though both decode perfectly. That's exactly the gap this check is meant to reveal (e2e-tested). It runs in the lazily loaded decoder chunk.
 
 ### 2. Readability analysis
 
@@ -235,7 +245,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 87 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 39 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 40 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 
