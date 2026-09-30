@@ -36,7 +36,7 @@ test.describe("copy to clipboard", () => {
     await page.goto("/");
     await page.getByLabel("Website URL").fill("gdg.community.dev");
     await expectScanState(page, "good");
-    await page.getByRole("button", { name: /Copy/ }).click();
+    await page.getByRole("button", { name: "Copy", exact: true }).click();
     await expect(page.getByTestId("toast")).toContainText("Copied the image");
 
     const bytes = await page.evaluate(async () => {
@@ -54,7 +54,7 @@ test("falls back to the share sheet when a browser refuses to copy images", asyn
   await page.getByLabel("Website URL").fill("gdg.community.dev");
   await expectScanState(page, "good");
 
-  await page.getByRole("button", { name: /Copy/ }).click();
+  await page.getByRole("button", { name: "Copy", exact: true }).click();
   await expect(page.getByTestId("toast")).toContainText("share menu opened instead");
   const files = await shared(page);
   expect(files).toHaveLength(1);
