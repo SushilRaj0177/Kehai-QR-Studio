@@ -252,3 +252,32 @@ test("a logo can be dropped onto the Logo section or pasted", async ({ page }) =
   }, png);
   await expect(page.getByAltText("Current logo")).toBeVisible();
 });
+
+test.describe("design links", () => {
+  test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+
+  test("a copied link reopens the same content and design", async ({ page, context }) => {
+    await pickKind(page, "Text");
+    await page.getByLabel("Text", { exact: true }).fill("Shared · 共有 🌸");
+    await page.getByRole("button", { name: /Sakura/ }).click();
+    await expectScanState(page, "good");
+    const original = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+
+    await page.getByTestId("copy-link").click();
+    await expect(page.getByTestId("toast")).toContainText("Link copied");
+    const link = await page.evaluate(() => navigator.clipboard.readText());
+    expect(link).toMatch(/#d=/);
+
+    const other = await context.newPage();
+    await stubSiteLogos(other);
+    await other.goto(link);
+    await expect(other.getByTestId("toast")).toContainText("Opened a shared design");
+    await expect(other.getByLabel("Text", { exact: true })).toHaveValue("Shared · 共有 🌸");
+    await expect(other.getByRole("button", { name: /Sakura/ })).toHaveAttribute("aria-pressed", "true");
+    expect(new URL(other.url()).hash).toBe(""); // address bar tidied
+    await expectScanState(other, "good");
+    const copy = decodePng((await downloadVia(other, /Download PNG/)).buffer);
+    expect(copy.text).toBe(original.text);
+    expect(Buffer.compare(copy.data, original.data)).toBe(0); // same pixels
+  });
+});

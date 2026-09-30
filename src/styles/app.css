@@ -922,6 +922,17 @@ input[type="range"] {
 .link-button:hover {
   color: var(--text);
 }
+.link-button--center {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  gap: 6px;
+  padding: 6px 0;
+}
+.link-button--center svg {
+  width: 14px;
+  height: 14px;
+}
 
 /* ---------------------------------------------------------------- preview */
 

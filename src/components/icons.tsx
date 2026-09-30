@@ -48,7 +48,7 @@ export function KindIcon({ kind }: { kind: QrKind }) {
   }
 }
 
-export function Icon({ name }: { name: "download" | "copy" | "save" | "sun" | "moon" | "check" | "x" | "alert" | "trash" | "upload" | "arrow" | "github" | "spark" | "share" }) {
+export function Icon({ name }: { name: "download" | "copy" | "save" | "sun" | "moon" | "check" | "x" | "alert" | "trash" | "upload" | "arrow" | "github" | "spark" | "share" | "link" }) {
   switch (name) {
     case "download":
       return (
@@ -61,6 +61,13 @@ export function Icon({ name }: { name: "download" | "copy" | "save" | "sun" | "m
         <svg {...base}>
           <rect x="8" y="8" width="13" height="13" rx="2" />
           <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+        </svg>
+      );
+    case "link":
+      return (
+        <svg {...base}>
+          <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1" />
+          <path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1" />
         </svg>
       );
     case "save":

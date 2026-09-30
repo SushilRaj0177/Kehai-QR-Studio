@@ -20,6 +20,7 @@ interface Props {
   onDownload: (ext: "png" | "svg") => void;
   onCopy: () => void;
   onSave: () => void;
+  onCopyLink: () => void;
 }
 
 function ScanBadge({ scan, issues }: { scan: ScanState; issues: ReadabilityIssue[] }) {
@@ -62,7 +63,7 @@ function ScanBadge({ scan, issues }: { scan: ScanState; issues: ReadabilityIssue
 }
 
 export function Preview(props: Props) {
-  const { containerRef, payload, placeholder, design, scan, issues, busy, canCopy, canShare, onShare, onDownload, onCopy, onSave } = props;
+  const { containerRef, payload, placeholder, design, scan, issues, busy, canCopy, canShare, onShare, onDownload, onCopy, onSave, onCopyLink } = props;
   const { t } = useI18n();
   const disabled = !payload || busy !== null;
 
@@ -127,6 +128,11 @@ export function Preview(props: Props) {
             <Icon name="save" /> {t("Save")}
           </button>
         </div>
+        {payload && (
+          <button type="button" className="link-button link-button--center" onClick={onCopyLink} data-testid="copy-link">
+            <Icon name="link" /> {t("Copy design link")}
+          </button>
+        )}
         {!payload && <p className="muted small center">{t("Complete the form to enable downloads.")}</p>}
       </div>
 

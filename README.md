@@ -49,11 +49,20 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **84 unit/component tests** (Vitest) plus **38 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **87 unit/component tests** (Vitest) plus **39 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
-**Extras:** 🖼️ **drag-and-drop or paste** a logo · ✨ **automatic website logos** for URL codes (see below) · 📤 **Share** button on phones (native share sheet) · 🇯🇵 **English / 日本語** language toggle (see below).
+**Extras:** 🔗 **design links** (see below) · 🖼️ **drag-and-drop or paste** a logo · ✨ **automatic website logos** for URL codes (see below) · 📤 **Share** button on phones (native share sheet) · 🇯🇵 **English / 日本語** language toggle (see below).
+
+### Design links
+
+**Copy design link** (under the download buttons) copies a URL that reopens the studio with the same type, content and design. It's handy for sending teammates an exact code to reuse or tweak.
+
+- The state is packed into the URL **fragment** (`#d=…`, UTF-8 JSON in URL-safe base64), which browsers never send to a server. After opening, the fragment is removed from the address bar. Pasting a link into an already-open tab works too.
+- **Links are untrusted input** (`src/lib/shareLink.ts`): the type must be a known one, each field must have the right type and is capped in length, enums are matched against the real options, numbers are clamped, and colours must be `#rrggbb`. Anything else falls back to the default. **Logos are never included**, so no images from strangers; a website's logo is looked up again.
+- A Wi-Fi link includes the password, and the toast says so.
+- **Tested:** unit tests cover the round trip (including UTF-8), stripping the logo, and a hostile payload (bad enums, huge numbers, CSS in a colour, a remote logo URL). An e2e test copies a link, opens it in a new tab, and checks the download is **pixel-identical**.
 
 ### English / 日本語
 
@@ -225,8 +234,8 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 84 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 38 end-to-end tests in Chromium (desktop + Pixel 7)
+npm test             # 87 unit + component tests (Vitest, jsdom)
+npm run test:e2e     # 39 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 

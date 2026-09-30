@@ -147,6 +147,11 @@ export const JA: Record<string, string> = {
   Save: "保存",
   "Complete the form to enable downloads.": "フォームを入力するとダウンロードできます。",
   "Encoded content": "エンコードされた内容",
+  "Copy design link": "デザインのリンクをコピー",
+  "Opened a shared design.": "共有されたデザインを開きました。",
+  "Link copied — it includes the Wi-Fi password.": "リンクをコピーしました。Wi-Fi のパスワードも含まれています。",
+  "Link copied. Anyone who opens it gets this exact code.": "リンクをコピーしました。開いた人は同じコードを使えます。",
+  "Copy this link:": "このリンクをコピーしてください：",
 
   // ------------------------------------------------------------ readability
   "Too much data": "データが多すぎます",

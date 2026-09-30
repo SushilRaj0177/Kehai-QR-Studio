@@ -15,6 +15,7 @@ import { DEFAULT_FIELDS, KINDS, describe, encode, validate, type AllFields, type
 import { analyze } from "./lib/readability";
 import { canCopyImage, canShareImage, copyImage, downloadBlob, fileBaseName, makeThumbnail, shareImage } from "./lib/exporting";
 import { newId, type RecentEntry } from "./lib/history";
+import { decodeShareLink, encodeShareLink, type SharedState } from "./lib/shareLink";
 import { KEHAI_URL, REPO_URL } from "./lib/links";
 import { I18nContext, rich, useLangState } from "./i18n/I18nContext";
 
@@ -35,9 +36,13 @@ export default function App() {
   const { theme, toggle } = useTheme();
   const { recent, add, remove, clear } = useRecent();
 
-  const [kind, setKind] = useState<QrKind>("url");
-  const [fields, setFields] = useState<AllFields>(DEFAULT_FIELDS);
-  const [design, setDesign] = useState<QrDesign>(DEFAULT_DESIGN);
+  // A design link (#d=…) opens straight into its state, with no flash of the defaults.
+  const [shared] = useState(() => decodeShareLink(window.location.hash));
+  const [kind, setKind] = useState<QrKind>(shared?.kind ?? "url");
+  const [fields, setFields] = useState<AllFields>(() =>
+    shared ? { ...DEFAULT_FIELDS, [shared.kind]: { ...DEFAULT_FIELDS[shared.kind], ...shared.fields } } : DEFAULT_FIELDS,
+  );
+  const [design, setDesign] = useState<QrDesign>(shared?.design ?? DEFAULT_DESIGN);
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast>(null);
@@ -234,6 +239,44 @@ export default function App() {
     [notify, t],
   );
 
+  const openShared = useCallback((s: SharedState) => {
+    setKind(s.kind);
+    setFields((f) => ({ ...f, [s.kind]: { ...DEFAULT_FIELDS[s.kind], ...s.fields } }));
+    setDesign(s.design);
+    setTouched(new Set());
+  }, []);
+
+  // Tidy the address bar once a link has been opened, and handle a link
+  // pasted into this same tab (only the hash changes, so there's no reload).
+  useEffect(() => {
+    const clear = () => history.replaceState(null, "", window.location.pathname + window.location.search);
+    if (shared) {
+      clear();
+      notify({ tone: "info", text: t("Opened a shared design.") });
+    }
+    const onHash = () => {
+      const s = decodeShareLink(window.location.hash);
+      if (!s) return;
+      openShared(s);
+      clear();
+      notify({ tone: "info", text: t("Opened a shared design.") });
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount only
+  }, []);
+
+  const onCopyLink = useCallback(async () => {
+    const url = window.location.origin + window.location.pathname + encodeShareLink(kind, current, design);
+    const note = kind === "wifi" && fields.wifi.password ? t("Link copied — it includes the Wi-Fi password.") : t("Link copied. Anyone who opens it gets this exact code.");
+    try {
+      await navigator.clipboard.writeText(url);
+      notify({ tone: "ok", text: note });
+    } catch {
+      window.prompt(t("Copy this link:"), url);
+    }
+  }, [kind, current, design, fields.wifi.password, notify, t]);
+
   const kindLabel = t(KINDS.find((k) => k.id === kind)?.label ?? "");
 
   return (
@@ -324,6 +367,7 @@ export default function App() {
             onDownload={onDownload}
             onCopy={onCopy}
             onSave={onSave}
+            onCopyLink={onCopyLink}
           />
           <KehaiCallout />
         </aside>
