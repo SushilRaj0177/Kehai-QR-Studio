@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import type { QrDesign } from "../lib/design";
-import { verifyScan, type ScanResult } from "../lib/scanCheck";
+import type { ScanResult } from "../lib/scanCheck";
+
+// The decoder (jsQR, ~130 kB) isn't needed to draw the page, so it lives in
+// its own chunk. Loading starts as soon as this module runs, in parallel
+// with the first render, and by the first check it's usually ready.
+let decoder: Promise<typeof import("../lib/scanCheck")> | null = null;
+const loadDecoder = () => (decoder ??= import("../lib/scanCheck"));
+if (typeof window !== "undefined") queueMicrotask(() => void loadDecoder().catch(() => (decoder = null)));
 
 export type ScanState = ScanResult | { status: "checking" } | { status: "idle" };
 
@@ -28,6 +35,7 @@ export function useScanCheck(
       try {
         const blob = await getBlob("png");
         if (cancelled || !blob) return;
+        const { verifyScan } = await loadDecoder();
         const result = await verifyScan(blob, payload);
         if (!cancelled) setState(result);
       } catch {

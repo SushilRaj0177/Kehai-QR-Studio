@@ -192,6 +192,8 @@ e2e/                        Playwright: behaviour, responsive layout, README scr
 **Data flow:** `fields → validate() → encode() → payload`, then `payload + design` feeds three things: the **renderer** (preview and export), **analyze()** (warnings) and **verifyScan()** (badge).
 There is one source of truth for the design, so the preview, the downloaded PNG and the SVG can't drift apart.
 
+**Bundle splitting.** The first load needs React, the renderer and the app (~91 kB gzipped). The jsQR decoder (~48 kB gzipped) is only needed for the scan badge, so it's a separate chunk fetched in parallel with the first render (`useScanCheck`). React and the renderer are also separate chunks, so a redeploy of app code doesn't re-download them. Before this, everything was one 141 kB gzipped file.
+
 **No backend.** Everything runs in the browser. Fonts are bundled rather than loaded from Google Fonts, and only the three kanji subsets the app actually uses are shipped. The **only** outside request is the optional website-logo lookup: it sends the link's domain name to a public favicon service, and it can be switched off.
 
 ---
