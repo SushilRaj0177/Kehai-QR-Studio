@@ -35,7 +35,7 @@
   --border-strong: rgba(255, 255, 255, 0.18);
   --text: #f4f2ee;
   --text-2: rgba(244, 242, 238, 0.66);
-  --text-3: rgba(244, 242, 238, 0.42);
+  --text-3: rgba(244, 242, 238, 0.56); /* ≥4.5:1 on every surface (axe-checked) */
   --input-bg: rgba(255, 255, 255, 0.04);
   --kanji: rgba(255, 45, 85, 0.07);
   --stage: #0a0e14;
@@ -57,7 +57,7 @@
   --border-strong: rgba(20, 16, 12, 0.22);
   --text: #16130f;
   --text-2: rgba(22, 19, 15, 0.7);
-  --text-3: rgba(22, 19, 15, 0.48);
+  --text-3: rgba(22, 19, 15, 0.68); /* ≥4.5:1 on every surface (axe-checked) */
   --input-bg: rgba(20, 16, 12, 0.035);
   --kanji: rgba(200, 16, 46, 0.06);
   --stage: #ece7df;
@@ -591,7 +591,7 @@ html[lang="ja"] .kind-tab__label {
 }
 .segmented--ec .segmented__item span {
   font-size: 11px;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 .segmented--ec strong {
   font-family: var(--font-display);

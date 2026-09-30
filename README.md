@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **81 unit/component tests** (Vitest) plus **30 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **81 unit/component tests** (Vitest) plus **35 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -204,6 +204,7 @@ There is one source of truth for the design, so the preview, the downloaded PNG 
 - **UTF-8 that actually works.** The renderer writes one byte per character, which corrupts accents, kanji and emoji. Payloads are converted to their UTF-8 bytes first. There's an end-to-end test for `こんにちは 🌸`.
 - **Errors after interaction.** Validation messages appear once you leave a field, not while you're still typing the first character. Export stays disabled until the input is valid.
 - **Presets set looks only.** Your size and logo survive a preset change, and anything can be tweaked afterwards.
+- **Accessibility, audited:** an automated [axe-core](https://github.com/dequelabs/axe-core) audit runs in the e2e suite against WCAG 2.1 A/AA in both themes and both languages, and on a busy screen (warnings, website logo, recent codes). The first run found secondary text below 4.5:1 contrast, so the `--text-3` token was raised in both themes. There are zero violations now.
 - **Accessibility:** native radio groups for every choice (keyboard and screen-reader friendly), labelled controls, `aria-invalid` / `aria-describedby` for errors, live regions for the scan badge and toasts, visible focus rings, and reduced-motion support.
 
 ---
@@ -223,7 +224,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 81 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 30 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 35 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 
@@ -235,6 +236,7 @@ What the end-to-end suite verifies, in a real browser:
 - **Presets** apply and stay editable. **Invalid input** shows errors and blocks export. **Risky designs** raise warnings.
 - A **logo** raises error correction and still scans. **SVG export** is a valid SVG document.
 - **Recent codes survive a reload** and restore type, content and preset. Removing and clearing work.
+- **Zero axe-core WCAG 2.1 AA violations** in dark/light × English/Japanese, plus a busy-screen audit.
 - The **theme** and **language** persist, and the Japanese UI works end to end. On a **phone** there's no horizontal scrolling, the preview sits under the form, and all tabs are reachable.
 - **Website logos:** the favicon services are stubbed with a generated image, so the tests never depend on the internet. The tests cover:
   - a link gets its site's logo automatically (verified in the centre pixel of the download), and the code still decodes;
