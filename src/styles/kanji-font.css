@@ -1,0 +1,27 @@
+/* Noto Sans JP 900 — only the subsets containing the kanji this app
+   displays (符 気 配), copied from @fontsource/noto-sans-jp (OFL-1.1).
+   The full family would add ~150 kB of @font-face rules. */
+@font-face {
+  font-family: "Noto Sans JP";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url("../assets/fonts/noto-sans-jp-78-900.woff2") format("woff2");
+  unicode-range: U+4e32,U+51db,U+53a8,U+53ea,U+5609,U+5674,U+5a92,U+5e7e,U+6115,U+611a,U+62cc,U+62ed,U+63c9,U+64b9,U+64e6,U+65cb,U+6606,U+6731,U+683d,U+6afb,U+7460,U+771e,U+78ef,U+7b26,U+7b51,U+7cde,U+7d10,U+7d2f,U+7d46,U+80de,U+819c,U+84b2,U+85cd,U+865a,U+8ecc,U+9022,U+90b8,U+9192,U+9675,U+96b7,U+99ff,U+ff44,U+ff55,U+ff6c,U+ff73,U+ff75,U+ff86,U+ff8d,U+ff92,U+ffe3;
+}
+@font-face {
+  font-family: "Noto Sans JP";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url("../assets/fonts/noto-sans-jp-112-900.woff2") format("woff2");
+  unicode-range: U+4e16,U+4e3b,U+4ea4,U+4ee4,U+4f4d,U+4f4f,U+4f55,U+4f9b,U+5317,U+5358,U+53c2,U+53e4,U+548c,U+571f,U+59cb,U+5cf6,U+5e38,U+63a2,U+63b2,U+6559,U+662d,U+679c,U+6c7a,U+72b6,U+7523,U+767d,U+770c,U+7a2e,U+7a3f,U+7a7a,U+7b2c,U+7b49,U+7d20,U+7d42,U+8003,U+8272,U+8a08,U+8aac,U+8cb7,U+8eab,U+8ee2,U+9054-9055,U+90fd,U+914d,U+91cd,U+969b,U+97f3,U+984c,U+ff06;
+}
+@font-face {
+  font-family: "Noto Sans JP";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url("../assets/fonts/noto-sans-jp-117-900.woff2") format("woff2");
+  unicode-range: U+4e,U+a0,U+3000,U+300c-300d,U+4e00,U+4e0a,U+4e2d,U+4e8b,U+4eba,U+4f1a,U+5165,U+5168,U+5185,U+51fa,U+5206,U+5229,U+524d,U+52d5,U+5408,U+554f,U+5831,U+5834,U+5927,U+5b9a,U+5e74,U+5f0f,U+60c5,U+65b0,U+65b9,U+6642,U+6700,U+672c,U+682a,U+6b63,U+6c17,U+7121,U+751f,U+7528,U+753b,U+76ee,U+793e,U+884c,U+898b,U+8a18,U+9593,U+95a2,U+ff01,U+ff08-ff09;
+}
