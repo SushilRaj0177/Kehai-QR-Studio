@@ -13,6 +13,8 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:4173",
     acceptDownloads: true,
+    // Service workers would bypass page.route() stubs; offline.spec.ts opts back in.
+    serviceWorkers: "block",
     launchOptions,
   },
   webServer: {
