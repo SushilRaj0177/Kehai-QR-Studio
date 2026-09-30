@@ -49,11 +49,11 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **81 unit/component tests** (Vitest) plus **36 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **81 unit/component tests** (Vitest) plus **37 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
-**Extras:** ✨ **automatic website logos** for URL codes (see below) · 📤 **Share** button on phones (native share sheet) · 🇯🇵 **English / 日本語** language toggle (see below).
+**Extras:** 🖼️ **drag-and-drop or paste** a logo · ✨ **automatic website logos** for URL codes (see below) · 📤 **Share** button on phones (native share sheet) · 🇯🇵 **English / 日本語** language toggle (see below).
 
 ### English / 日本語
 
@@ -226,7 +226,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 81 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 36 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 37 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 
@@ -236,7 +236,7 @@ What the end-to-end suite verifies, in a real browser:
 - The **downloaded PNG is pixel-identical** to the preview.
 - **Size, colours, error correction and margin** change the output immediately. Size and colour are checked in the downloaded file itself.
 - **Presets** apply and stay editable. **Invalid input** shows errors and blocks export. **Risky designs** raise warnings.
-- A **logo** raises error correction and still scans. **SVG export** is a valid SVG document.
+- A **logo** raises error correction and still scans. It can be uploaded, **dragged onto the Logo section** or **pasted** (e.g. a screenshot) anywhere on the page. **SVG export** is a valid SVG document.
 - **Recent codes survive a reload** and restore type, content and preset. Removing and clearing work.
 - **Zero axe-core WCAG 2.1 AA violations** in dark/light × English/Japanese, plus a busy-screen audit.
 - **Offline:** after one visit, a reload with no network still makes, verifies and downloads a code.

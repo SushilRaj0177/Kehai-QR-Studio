@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { decodePng, downloadVia, expectScanState, pickKind, previewPng, stubSiteLogos } from "./helpers";
+import { decodePng, downloadVia, expectScanState, makeLogoPng, pickKind, previewPng, stubSiteLogos } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   // No real favicon lookups: the site-logo feature has its own tests below.
@@ -212,4 +212,33 @@ test("theme toggle switches and persists", async ({ page }) => {
   await expect(html).toHaveAttribute("data-theme", next);
   await page.reload();
   await expect(html).toHaveAttribute("data-theme", next);
+});
+
+test("a logo can be dropped onto the Logo section or pasted", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Website URL").fill("example.com");
+  await expectScanState(page, "good");
+
+  const png = makeLogoPng([34, 226, 245]).toString("base64");
+  // Drop.
+  await page.getByTestId("logo-drop").evaluate((el, b64) => {
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    dt.items.add(new File([bytes], "logo.png", { type: "image/png" }));
+    el.dispatchEvent(new DragEvent("dragover", { dataTransfer: dt, bubbles: true, cancelable: true }));
+    el.dispatchEvent(new DragEvent("drop", { dataTransfer: dt, bubbles: true, cancelable: true }));
+  }, png);
+  await expect(page.getByAltText("Current logo")).toBeVisible();
+  await expectScanState(page, "good");
+
+  // Remove, then paste.
+  await page.getByRole("button", { name: "Remove" }).click();
+  await expect(page.getByAltText("Current logo")).toHaveCount(0);
+  await page.evaluate((b64) => {
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    dt.items.add(new File([bytes], "logo.png", { type: "image/png" }));
+    document.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
+  }, png);
+  await expect(page.getByAltText("Current logo")).toBeVisible();
 });

@@ -831,6 +831,20 @@ input[type="range"] {
   color: var(--text);
   background: color-mix(in srgb, var(--shu) 5%, transparent);
 }
+.logo-drop {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border-radius: var(--radius-md);
+  transition: box-shadow 0.2s var(--ease);
+}
+.logo-drop.is-dragging {
+  box-shadow: 0 0 0 2px var(--shu);
+}
+.logo-drop.is-dragging .dropzone {
+  border-color: var(--shu);
+  background: color-mix(in srgb, var(--shu) 8%, transparent);
+}
 .logo-row {
   display: flex;
   align-items: center;

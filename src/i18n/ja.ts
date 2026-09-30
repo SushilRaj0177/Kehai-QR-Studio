@@ -239,6 +239,7 @@ export const JA: Record<string, string> = {
   Remove: "削除",
   "Add a centre logo": "中央にロゴを追加",
   "PNG, JPG, SVG · under 2 MB": "PNG・JPG・SVG · 2MB 未満",
+  "or drop / paste an image": "画像のドロップ・貼り付けもできます",
   "Looking for {domain}'s logo…": "{domain} のロゴを探しています…",
   "No usable logo found for {domain} — add your own above.": "{domain} に使えるロゴが見つかりませんでした。上から自分のロゴを追加できます。",
   "{domain}'s logo removed. {restore}": "{domain} のロゴを削除しました。{restore}",

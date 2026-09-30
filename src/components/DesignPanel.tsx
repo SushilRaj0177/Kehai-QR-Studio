@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import {
   CORNER_DOT_STYLES,
   CORNER_STYLES,
@@ -140,6 +140,39 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
     reader.onerror = () => setLogoError(t("Couldn't read that file."));
     reader.readAsDataURL(file);
   }
+
+  // Paste an image anywhere on the page (e.g. a screenshot of a logo) to
+  // use it. Text pastes are untouched.
+  const pickRef = useRef(pickLogo);
+  pickRef.current = pickLogo;
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const file = [...(e.clipboardData?.files ?? [])].find((f) => f.type.startsWith("image/"));
+      if (!file) return;
+      e.preventDefault();
+      pickRef.current(file);
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  }, []);
+
+  const [dragging, setDragging] = useState(false);
+  const dropProps = {
+    onDragOver: (e: DragEvent) => {
+      if (![...e.dataTransfer.types].includes("Files")) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+      setDragging(true);
+    },
+    onDragLeave: (e: DragEvent) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
+    },
+    onDrop: (e: DragEvent) => {
+      e.preventDefault();
+      setDragging(false);
+      pickLogo(e.dataTransfer.files[0]);
+    },
+  };
 
   return (
     <div className="design-panel">
@@ -291,6 +324,7 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
       </Section>
 
       <Section title={t("Logo")}>
+        <div className={`logo-drop${dragging ? " is-dragging" : ""}`} data-testid="logo-drop" {...dropProps}>
         <input
           ref={fileRef}
           type="file"
@@ -328,8 +362,10 @@ export function DesignPanel({ design, activePreset, onChange, onPreset, onLogo, 
             <Icon name="upload" />
             <span>{t("Add a centre logo")}</span>
             <span className="muted small">{t("PNG, JPG, SVG · under 2 MB")}</span>
+            <span className="muted small">{t("or drop / paste an image")}</span>
           </button>
         )}
+        </div>
         <SiteLogoLine status={siteLogo} hasLogo={!!design.logo.src} onRestore={onRestoreSiteLogo} />
         <label className="check">
           <input type="checkbox" checked={autoLogo} onChange={(e) => onAutoLogo(e.target.checked)} />
