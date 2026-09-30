@@ -13,7 +13,7 @@ import { useSiteLogo } from "./hooks/useSiteLogo";
 import { DEFAULT_DESIGN, PRESETS, applyPreset, matchingPreset, type QrDesign } from "./lib/design";
 import { DEFAULT_FIELDS, KINDS, describe, encode, validate, type AllFields, type QrKind } from "./lib/qrTypes";
 import { analyze } from "./lib/readability";
-import { canCopyImage, copyImage, downloadBlob, fileBaseName, makeThumbnail } from "./lib/exporting";
+import { canCopyImage, canShareImage, copyImage, downloadBlob, fileBaseName, makeThumbnail, shareImage } from "./lib/exporting";
 import { newId, type RecentEntry } from "./lib/history";
 import { KEHAI_URL, REPO_URL } from "./lib/links";
 
@@ -140,20 +140,71 @@ export default function App() {
     [payload, getBlob, kind, current, remember, notify],
   );
 
+  const shareSupported = useMemo(() => canShareImage(), []);
+  const copySupported = useMemo(() => canCopyImage(), []);
+
+  const pngOrThrow = useCallback(async () => {
+    const blob = await getBlob("png");
+    if (!blob) throw new Error("Nothing to export yet.");
+    return blob;
+  }, [getBlob]);
+
+  /** Opens the native share sheet; returns false if the user cancelled. */
+  const share = useCallback(
+    async (blob: Blob) => {
+      try {
+        await shareImage(blob, `${fileBaseName(describe(kind, current))}.png`, "QR code");
+        return true;
+      } catch (e) {
+        if ((e as Error)?.name === "AbortError") return false;
+        throw e;
+      }
+    },
+    [kind, current],
+  );
+
   const onCopy = useCallback(async () => {
     setBusy("copy");
+    // Start the clipboard write *now*, inside the click, with the image as a
+    // promise — waiting for the render first loses the user-gesture
+    // permission in stricter browsers (Samsung Internet, Safari).
+    const image = pngOrThrow();
     try {
-      const blob = await getBlob("png");
-      if (!blob) throw new Error("Nothing to copy yet.");
-      await copyImage(blob);
-      await remember(blob);
+      await copyImage(image);
+      await remember(await image);
       notify({ tone: "ok", text: "Copied the image to your clipboard." });
-    } catch (e) {
-      notify({ tone: "error", text: e instanceof Error && e.message ? e.message : "Your browser blocked clipboard access." });
+    } catch {
+      // Some mobile browsers refuse to put images on the clipboard at all:
+      // fall back to the share sheet, where "Copy" or any app is one tap away.
+      try {
+        const blob = await image;
+        if (shareSupported) {
+          if (await share(blob)) {
+            await remember(blob);
+            notify({ tone: "info", text: "This browser can't copy images, so the share menu opened instead." });
+          }
+        } else {
+          notify({ tone: "error", text: "This browser doesn't allow copying images — use Download instead." });
+        }
+      } catch {
+        notify({ tone: "error", text: "Couldn't copy or share the image — use Download instead." });
+      }
     } finally {
       setBusy(null);
     }
-  }, [getBlob, remember, notify]);
+  }, [pngOrThrow, remember, notify, shareSupported, share]);
+
+  const onShare = useCallback(async () => {
+    setBusy("share");
+    try {
+      const blob = await pngOrThrow();
+      if (await share(blob)) await remember(blob);
+    } catch {
+      notify({ tone: "error", text: "Sharing failed — use Download instead." });
+    } finally {
+      setBusy(null);
+    }
+  }, [pngOrThrow, share, remember, notify]);
 
   const onSave = useCallback(async () => {
     setBusy("save");
@@ -252,7 +303,9 @@ export default function App() {
             scan={scan}
             issues={issues}
             busy={busy}
-            canCopy={canCopyImage()}
+            canCopy={copySupported || shareSupported}
+            canShare={shareSupported}
+            onShare={onShare}
             onDownload={onDownload}
             onCopy={onCopy}
             onSave={onSave}

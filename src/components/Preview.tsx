@@ -13,6 +13,9 @@ interface Props {
   issues: ReadabilityIssue[];
   busy: string | null;
   canCopy: boolean;
+  /** Web Share with files is available (mostly phones). */
+  canShare: boolean;
+  onShare: () => void;
   onDownload: (ext: "png" | "svg") => void;
   onCopy: () => void;
   onSave: () => void;
@@ -57,7 +60,7 @@ function ScanBadge({ scan, issues }: { scan: ScanState; issues: ReadabilityIssue
 }
 
 export function Preview(props: Props) {
-  const { containerRef, payload, placeholder, design, scan, issues, busy, canCopy, onDownload, onCopy, onSave } = props;
+  const { containerRef, payload, placeholder, design, scan, issues, busy, canCopy, canShare, onShare, onDownload, onCopy, onSave } = props;
   const disabled = !payload || busy !== null;
 
   return (
@@ -99,7 +102,7 @@ export function Preview(props: Props) {
             <Icon name="download" />
           </span>
         </button>
-        <div className="actions__row">
+        <div className={`actions__row${canShare ? " actions__row--4" : ""}`}>
           <button type="button" className="btn btn--ghost" disabled={disabled} onClick={() => onDownload("svg")}>
             <Icon name="download" /> SVG
           </button>
@@ -112,6 +115,11 @@ export function Preview(props: Props) {
           >
             <Icon name="copy" /> Copy
           </button>
+          {canShare && (
+            <button type="button" className="btn btn--ghost" disabled={disabled} onClick={onShare}>
+              <Icon name="share" /> Share
+            </button>
+          )}
           <button type="button" className="btn btn--ghost" disabled={disabled} onClick={onSave}>
             <Icon name="save" /> Save
           </button>

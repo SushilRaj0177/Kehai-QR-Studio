@@ -49,11 +49,19 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **76 unit/component tests** (Vitest) plus **22 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **76 unit/component tests** (Vitest) plus **26 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
-**Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard · ✅ custom module and corner patterns · ✅ dark / light theme.
+**Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
-**Extra:** ✨ **automatic website logos** for URL codes (see below).
+**Extras:** ✨ **automatic website logos** for URL codes (see below) · 📤 **Share** button on phones (native share sheet).
+
+### Copy & share across browsers
+
+Browsers only allow writing to the clipboard **during the click itself**.
+- The Studio starts the clipboard write immediately and hands it the image as a *promise* that resolves when rendering finishes. Stricter engines such as Samsung Internet and Safari reject the write if the page first waits for the image.
+- Engines that can't take a promise get a retry with the finished image.
+- Some mobile browsers refuse image copies outright. There, **Copy falls back to the native share sheet**, where copying or sending to any app is one tap away. Browsers with neither show a clear "use Download instead" message.
+- On devices that can share files, a separate **Share** button sends the PNG straight to WhatsApp, Drive and so on. Shared codes are saved to Recent, just like downloads.
 
 ---
 
@@ -193,7 +201,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 76 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 22 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 26 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 
@@ -213,6 +221,10 @@ What the end-to-end suite verifies, in a real browser:
   - another site swaps the logo, and a non-URL type clears it;
   - missing or too-small icons mean no logo;
   - the off switch is remembered and makes no requests at all.
+- **Copy & share:**
+  - Copy puts the exact PNG on the clipboard; it's read back and decoded.
+  - When a browser rejects image copies (simulated), Copy opens the share sheet with the PNG instead.
+  - The Share button appears only where file sharing is supported, and it shares a decodable PNG.
 
 ---
 

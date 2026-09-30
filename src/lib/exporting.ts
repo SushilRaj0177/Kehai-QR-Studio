@@ -26,9 +26,43 @@ export function canCopyImage(): boolean {
   return typeof navigator !== "undefined" && !!navigator.clipboard && typeof ClipboardItem !== "undefined";
 }
 
-export async function copyImage(blob: Blob): Promise<void> {
+/**
+ * Copy a PNG to the clipboard.
+ *
+ * Call this *synchronously* from the click handler and pass the image as a
+ * Promise: browsers only allow clipboard writes during a user gesture, and
+ * stricter engines (Safari, Samsung Internet) reject the write if we first
+ * await the render and only then call clipboard.write(). Engines that don't
+ * accept a Promise inside ClipboardItem get a retry with the resolved blob.
+ */
+export async function copyImage(image: Blob | Promise<Blob>): Promise<void> {
   if (!canCopyImage()) throw new Error("Copying images isn't supported in this browser.");
-  await navigator.clipboard.write([new ClipboardItem({ [blob.type || "image/png"]: blob })]);
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": image })]);
+  } catch (e) {
+    if (!(image instanceof Promise)) throw e;
+    const blob = await image;
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+  }
+}
+
+/** True where the Web Share API can share an image file (mostly phones). */
+export function canShareImage(): boolean {
+  try {
+    return (
+      typeof navigator !== "undefined" &&
+      typeof navigator.canShare === "function" &&
+      navigator.canShare({ files: [new File([new Uint8Array(1)], "qr.png", { type: "image/png" })] })
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Open the device's share sheet with the PNG. Rejects with AbortError if the user cancels. */
+export async function shareImage(blob: Blob, filename: string, title: string): Promise<void> {
+  const file = new File([blob], filename, { type: "image/png" });
+  await navigator.share({ files: [file], title });
 }
 
 export async function blobToDataUrl(blob: Blob): Promise<string> {
