@@ -215,6 +215,21 @@ code {
   background: var(--frost-light, none) top left / 100vw auto no-repeat, var(--bg);
 }
 
+/* Desktop only: the pinned preview slides *under* the Recent codes panel at
+   the bottom of the page, and that panel shows it frosted. Baked glass can
+   only show the background, so this one panel keeps the live blur there
+   (desktop GPUs handle a single panel easily; on phones nothing overlaps). */
+@media (min-width: 861px) {
+  .panel.recent {
+    background: var(--surface);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .panel.recent > .glass {
+    display: none;
+  }
+}
+
 /* ---------------------------------------------------------------- topbar */
 
 .topbar {
@@ -427,6 +442,10 @@ html[lang="ja"] .kind-tab__label {
 }
 .panel--preview {
   grid-area: preview;
+}
+/* Stronger than .panel's position: relative (which <Glass> needs), so the
+   preview stays pinned on desktop. */
+.panel.panel--preview {
   position: sticky;
   top: 86px;
 }
@@ -1612,7 +1631,7 @@ html[lang="ja"] .stress__label {
       "design"
       "recent";
   }
-  .panel--preview {
+  .panel.panel--preview {
     position: relative; /* not sticky on phones; must stay positioned for <Glass> */
     top: auto; /* the sticky offset would shift a relative box */
   }

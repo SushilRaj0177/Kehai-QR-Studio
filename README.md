@@ -265,7 +265,9 @@ Measured scrolling a 412 px-wide page with the CPU throttled 4× (frame times vi
 | Smaller blur radius (6 px) | ~49 | ~24 of 116 | — |
 | **Baked glass** | **60** | **0** | 17 ms |
 
-Guards (e2e): only the top bar may use a live backdrop blur; every panel holding a `<Glass>` must be a positioned box (otherwise the fixed layer escapes and covers the page, a bug found while building this); and the baked images must exist for both themes.
+**One exception, on purpose:** on desktop the pinned preview slides *under* the Recent codes panel at the bottom of the page, and the original design shows it frosted there. Baked glass can only show the background, so on screens wider than 860 px that one panel keeps the live blur (cheap on desktop GPUs; on phones nothing overlaps).
+
+Guards (e2e): only the top bar (plus the Recent panel on desktop) may use a live backdrop blur; every panel holding a `<Glass>` must be a positioned box (otherwise the fixed layer escapes and covers the page, a bug found while building this); and the baked images must exist for both themes.
 
 **Works offline.** A small hand-written service worker (`public/sw.js`) serves pages network-first, falling back to the cached copy offline, and hashed `/assets/*` files cache-first (they can never be stale). It never touches cross-origin requests. After one visit the whole studio runs offline, including the scan check and downloads, and a web manifest makes it installable to a home screen. This is covered by an e2e test that reloads with the network switched off, makes a code and decodes the download.
 
@@ -301,7 +303,10 @@ Requires Node 18+.
 npm test             # 95 unit + component tests (Vitest, jsdom)
 npm run test:e2e     # 50 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
+npm run test:visual  # pixel comparison against the approved look (14 screenshots)
 ```
+
+**Visual regression (`npm run test:visual`).** The approved look is stored as 14 baseline screenshots (phone and desktop, dark and light, several scroll positions) in `e2e/visual.spec.ts-snapshots/`. The check fails if more than 50 pixels change beyond a 2% colour tolerance; a deliberate 2 px change to the panels' corner radius is caught (223 pixels). It runs locally before any CSS/layout change, not in CI, because font rendering differs slightly between machines. If a change is meant to alter the look and has been approved, run `npm run test:visual -- --update-snapshots`.
 
 What the end-to-end suite verifies, in a real browser:
 
