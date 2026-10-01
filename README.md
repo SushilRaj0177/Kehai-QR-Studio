@@ -273,7 +273,7 @@ npm run screenshots  # regenerate docs/screenshots
 
 What the end-to-end suite verifies, in a real browser:
 
-- **Every type** (URL, text including UTF-8/emoji, email, phone, Wi-Fi with special characters, vCard contact) is decoded by **two independent decoders**: jsQR, and ZXing (zxing-cpp via `zxing-wasm`, the engine most Android scanner apps use); is downloaded as PNG and **decoded back to the exact payload**.
+- **Every type** (URL, text including UTF-8/emoji, email, phone, Wi-Fi with special characters, vCard contact) is downloaded as PNG and **decoded back to the exact payload by two independent decoders**: jsQR, and ZXing (zxing-cpp via `zxing-wasm`, the engine most Android scanner apps use).
 - The **downloaded PNG is pixel-identical** to the preview.
 - **Size, colours, error correction and margin** change the output immediately. Size and colour are checked in the downloaded file itself.
 - **Presets** apply and stay editable. **Invalid input** shows errors and blocks export. **Risky designs** raise warnings.
