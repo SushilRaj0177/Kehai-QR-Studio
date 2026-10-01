@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **90 unit/component tests** (Vitest) plus **47 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **93 unit/component tests** (Vitest) plus **47 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -162,6 +162,8 @@ A perfect digital decode proves the data is right, but a phone camera is harsher
 
 All six presets pass all three. Grey-on-white fails *Dim light*, and a 400-character text at 320 px fails *Small*, even though both decode perfectly. That's exactly the gap this check is meant to reveal (e2e-tested). It runs in the lazily loaded decoder chunk.
 
+**Failure isolation:** if the checker itself can't run (the decoder fails to load, or canvas isn't available), the badge says *"Couldn't run the scan check"*, never *"Won't scan"*: a broken tool must not condemn a good code. The stress test is an extra; if it fails on some browser, the verified result stands without the chips. Unit-tested with a mocked decoder.
+
 ### 2. Readability analysis
 
 A decoder reading a perfect digital image is far more forgiving than a phone camera at an angle in dim light.
@@ -262,7 +264,7 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 90 unit + component tests (Vitest, jsdom)
+npm test             # 93 unit + component tests (Vitest, jsdom)
 npm run test:e2e     # 47 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```

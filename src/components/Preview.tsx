@@ -44,6 +44,10 @@ function ScanBadge({ scan, issues }: { scan: ScanState; issues: ReadabilityIssue
     tone = "bad";
     title = t("Decodes to the wrong content");
     detail = t("Something in the design is corrupting the data. Try higher error correction.");
+  } else if (scan.status === "error") {
+    tone = "idle";
+    title = t("Couldn't run the scan check");
+    detail = t("This is a problem with the checker, not your code. Reload the page to try again.");
   } else if (scan.status === "unreadable") {
     tone = "bad";
     title = t("Won't scan");

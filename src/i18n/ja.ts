@@ -134,6 +134,8 @@ export const JA: Record<string, string> = {
   "Something in the design is corrupting the data. Try higher error correction.":
     "デザインのどこかがデータを壊しています。誤り訂正を上げてみてください。",
   "Won't scan": "読み取れません",
+  "Couldn't run the scan check": "読み取りチェックを実行できませんでした",
+  "This is a problem with the checker, not your code. Reload the page to try again.": "コードではなくチェック機能の問題です。ページを再読み込みしてもう一度お試しください。",
   "The rendered code can't be decoded. Fix the issues below.": "生成したコードをデコードできません。下の問題を直してください。",
   "level {level}": "レベル {level}",
   "Readability warnings": "読み取りやすさの警告",

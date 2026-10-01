@@ -9,7 +9,12 @@ let decoder: Promise<typeof import("../lib/scanCheck")> | null = null;
 const loadDecoder = () => (decoder ??= import("../lib/scanCheck"));
 if (typeof window !== "undefined") queueMicrotask(() => void loadDecoder().catch(() => (decoder = null)));
 
-export type ScanState = (ScanResult & { stress?: StressResult }) | { status: "checking" } | { status: "idle" };
+export type ScanState =
+  | (ScanResult & { stress?: StressResult })
+  | { status: "checking" }
+  | { status: "idle" }
+  /** The checker itself couldn't run (decoder failed to load, canvas unavailable). Says nothing about the code. */
+  | { status: "error" };
 
 /**
  * Decodes the rendered code shortly after every change (debounced so
@@ -32,20 +37,31 @@ export function useScanCheck(
     let cancelled = false;
     setState({ status: "checking" });
     const timer = window.setTimeout(async () => {
+      let result: ScanResult;
+      let blob: Blob | null;
+      let mod: Awaited<ReturnType<typeof loadDecoder>>;
       try {
-        const blob = await getBlob("png");
+        blob = await getBlob("png");
         if (cancelled || !blob) return;
-        const { verifyScan, stressTest } = await loadDecoder();
-        const result = await verifyScan(blob, payload);
-        if (cancelled) return;
-        setState(result);
-        // Only worth stress-testing a code that decodes in the first place.
-        if (result.status === "ok") {
-          const stress = await stressTest(blob, payload);
-          if (!cancelled) setState({ ...result, stress });
-        }
+        mod = await loadDecoder();
+        result = await mod.verifyScan(blob, payload);
       } catch {
-        if (!cancelled) setState({ status: "unreadable" });
+        // A failure of the *checker* must never be reported as "won't scan":
+        // that would condemn perfectly good codes.
+        decoder = null; // let the next check retry the import
+        if (!cancelled) setState({ status: "error" });
+        return;
+      }
+      if (cancelled) return;
+      setState(result);
+      // Only worth stress-testing a code that decodes in the first place.
+      // It's an extra: if it fails on some browser, the verified result stands.
+      if (result.status !== "ok") return;
+      try {
+        const stress = await mod.stressTest(blob, payload);
+        if (!cancelled) setState({ ...result, stress });
+      } catch {
+        /* keep the verified result without stress chips */
       }
     }, delay);
     return () => {
