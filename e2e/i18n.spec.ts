@@ -13,6 +13,12 @@ test("switches to Japanese, keeps working, and remembers the choice", async ({ p
   await expect(page.locator("html")).toHaveAttribute("lang", "ja");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("ちゃんと読み取れるQRコードをデザイン。");
   await expect(page.getByRole("heading", { name: "自分らしく仕上げる" })).toBeVisible();
+  // Japanese labels use the body font, not the stress-chip layout (regression guard).
+  const label = await page.locator(".field__label").first().evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { size: cs.fontSize, margin: cs.marginTop };
+  });
+  expect(label).toEqual({ size: "12px", margin: "0px" });
 
   // Validation and scan status are translated too.
   const url = page.getByLabel("ウェブサイトの URL");

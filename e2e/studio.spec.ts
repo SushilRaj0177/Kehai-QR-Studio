@@ -313,3 +313,28 @@ test("a contact needs a phone number; everything else is optional", async ({ pag
   expect(file.text).toContain("FN:+919876543210");
   expect(file.text).toContain("TEL;TYPE=CELL:+919876543210");
 });
+
+test("presses ripple from the touch point and clean up after themselves", async ({ page }) => {
+  const btn = page.getByRole("button", { name: /Reset/ });
+  const box = (await btn.boundingBox())!;
+  await page.mouse.move(box.x + 5, box.y + box.height / 2);
+  await page.mouse.down();
+  const ripple = btn.locator(".ripple");
+  await expect(ripple).toHaveCount(1);
+  expect(await ripple.evaluate((el) => parseFloat(el.style.left))).toBeLessThan(10); // starts where pressed
+  await page.mouse.up();
+  await expect(ripple).toHaveCount(0, { timeout: 2000 });
+});
+
+test("the theme switch is a circular reveal from the button, never a grey cross-fade", async ({ page }) => {
+  await page.evaluate(() => {
+    const w = window as unknown as { __vt: number };
+    w.__vt = 0;
+    const orig = document.startViewTransition?.bind(document);
+    if (orig) document.startViewTransition = ((cb: () => void) => (w.__vt++, orig(cb))) as typeof document.startViewTransition;
+  });
+  const before = await page.locator("html").getAttribute("data-theme");
+  await page.getByTestId("theme-toggle").click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-theme", before!);
+  expect(await page.evaluate(() => (window as unknown as { __vt: number }).__vt)).toBe(1);
+});

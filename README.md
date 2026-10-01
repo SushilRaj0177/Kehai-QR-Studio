@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **90 unit/component tests** (Vitest) plus **45 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **90 unit/component tests** (Vitest) plus **47 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -65,6 +65,13 @@ The browser's built-in `<input type="color">` looks and behaves very differently
 - **Keyboard and screen readers:** both controls are `role="slider"` with values announced. Arrow keys nudge (Shift for bigger steps), Escape closes and returns focus, and clicking outside closes it.
 - The picker works in HSV but stores hex. It keeps the hue you chose when you drag to grey or black, where hex alone can't remember one (`src/lib/color.ts`, unit-tested with a round-trip sweep of the colour cube).
 - **Tested:** e2e tests cover dragging to exact colours (verified in the downloaded PNG's pixels), the keyboard, typing a hex, closing on an outside click, touch on a phone with no page jump, and axe in both themes.
+
+### Motion & press feedback
+
+- **Theme switch:** the new theme is revealed as a circle growing from the toggle (View Transitions API, `useTheme`). The browser swaps one snapshot of the page, so there's never a half-transitioned "grey" frame. Without the API, the switch is instant, with transitions suppressed for that frame (no slow cross-fade). The sun/moon icon spins in.
+- **Every pressable element** (buttons, tabs, chips, presets, swatches) springs down when pressed and back with a slight overshoot. A **ripple** spreads from the exact press point (`usePressRipple`: one delegated `pointerdown` listener, and the ripple span removes itself).
+- **No browser tap flash:** `-webkit-tap-highlight-color: transparent` removes the blue/grey rectangle mobile browsers draw on tapped elements. Focus rings on radio-based controls use `:has(:focus-visible)`, so they show for keyboard users but not after a tap.
+- **Reduced motion** (OS setting) turns all of this off.
 
 ### Design links
 
@@ -256,7 +263,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 90 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 45 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 47 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 

@@ -10,6 +10,7 @@ import { useScanCheck } from "./hooks/useScanCheck";
 import { useTheme } from "./hooks/useTheme";
 import { useRecent } from "./hooks/useRecent";
 import { useSiteLogo } from "./hooks/useSiteLogo";
+import { usePressRipple } from "./hooks/usePressRipple";
 import { DEFAULT_DESIGN, PRESETS, applyPreset, matchingPreset, type QrDesign } from "./lib/design";
 import { DEFAULT_FIELDS, KINDS, describe, encode, validate, type AllFields, type QrKind } from "./lib/qrTypes";
 import { analyze } from "./lib/readability";
@@ -34,6 +35,7 @@ export default function App() {
   const i18n = useLangState();
   const { t, lang, setLang } = i18n;
   const { theme, toggle } = useTheme();
+  usePressRipple();
   const { recent, add, remove, clear } = useRecent();
 
   // A design link (#d=…) opens straight into its state, with no flash of the defaults.
@@ -314,11 +316,16 @@ export default function App() {
           <button
             type="button"
             className="icon-button"
-            onClick={toggle}
+            onClick={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              toggle({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+            }}
             aria-label={theme === "dark" ? t("Switch to light theme") : t("Switch to dark theme")}
             data-testid="theme-toggle"
           >
-            <Icon name={theme === "dark" ? "sun" : "moon"} />
+            <span className="theme-icon" key={theme} aria-hidden>
+              <Icon name={theme === "dark" ? "sun" : "moon"} />
+            </span>
           </button>
         </nav>
       </header>
