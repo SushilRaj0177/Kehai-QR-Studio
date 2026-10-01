@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **95 unit/component tests** (Vitest) plus **49 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **95 unit/component tests** (Vitest) plus **50 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -251,6 +251,17 @@ There is one source of truth for the design, so the preview, the downloaded PNG 
 
 **Bundle splitting.** The first load needs React, the renderer and the app (~91 kB gzipped). The jsQR decoder (~48 kB gzipped) is only needed for the scan badge, so it's a separate chunk fetched in parallel with the first render (`useScanCheck`). React and the renderer are also separate chunks, so a redeploy of app code doesn't re-download them. Before this, everything was one 141 kB gzipped file.
 
+**Smooth scrolling (measured).** Real-phone testing showed small stutters while scrolling. The cause was `backdrop-filter: blur()` on the four large panels: every frame, the browser had to re-blur everything behind them, because the fixed background moves relative to the panels. The panels now use a near-opaque fill that looks the same, only the small sticky top bar keeps its blur, and the fixed background sits on its own compositor layer (`transform: translateZ(0)`, `contain: strict`), so it's never repainted.
+
+Measured scrolling a 412 px-wide page with the CPU throttled 4× (frame times via `requestAnimationFrame`):
+
+| | fps | janky frames (>25 ms) | worst frame |
+|---|---|---|---|
+| Before | ~43 | ~40 of 116 | 50 ms |
+| After | **60** | **0–1** | 17 ms |
+
+An e2e guard fails if any element other than the top bar gets a backdrop blur again.
+
 **Works offline.** A small hand-written service worker (`public/sw.js`) serves pages network-first, falling back to the cached copy offline, and hashed `/assets/*` files cache-first (they can never be stale). It never touches cross-origin requests. After one visit the whole studio runs offline, including the scan check and downloads, and a web manifest makes it installable to a home screen. This is covered by an e2e test that reloads with the network switched off, makes a code and decodes the download.
 
 **No backend.** Everything runs in the browser. Fonts are bundled rather than loaded from Google Fonts, and only the three kanji subsets the app actually uses are shipped. The **only** outside request is the optional website-logo lookup: it sends the link's domain name to a public favicon service, and it can be switched off.
@@ -283,7 +294,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 95 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 49 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 50 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 

@@ -377,3 +377,17 @@ test("a broken text-page link shows a friendly message", async ({ page }) => {
   await page.goto("/t/#not-a-valid-message!");
   await expect(page.getByText("This link doesn't contain a message.")).toBeVisible();
 });
+
+test("scroll performance guard: only the small sticky top bar uses a backdrop blur", async ({ page }) => {
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  const blurred = await page.evaluate(() =>
+    Array.from(document.querySelectorAll<HTMLElement>("body *"))
+      .filter((el) => {
+        const cs = getComputedStyle(el);
+        return (cs.backdropFilter && cs.backdropFilter !== "none") || ((cs as unknown as Record<string, string>).webkitBackdropFilter ?? "none") !== "none";
+      })
+      .map((el) => el.className),
+  );
+  expect(blurred).toEqual(["topbar"]);
+});
