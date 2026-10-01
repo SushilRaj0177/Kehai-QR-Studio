@@ -70,3 +70,20 @@ test("Japanese fits a small phone too", async ({ page }) => {
     expect(spill, sel).toBeLessThanOrEqual(0);
   }
 });
+
+test("the colour picker works by touch on a phone", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  await page.getByTestId("fg-swatch").tap();
+  const sv = page.getByTestId("fg-sv");
+  await sv.scrollIntoViewIfNeeded();
+  const box = (await sv.boundingBox())!;
+  await page.touchscreen.tap(box.x + box.width * 0.75, box.y + box.height * 0.25);
+  await expect(page.locator("#fg-hex")).not.toHaveValue("#0a0e14");
+  // The picker stays where the finger is (no jump), and the page didn't scroll it away.
+  const after = (await sv.boundingBox())!;
+  expect(Math.abs(after.y - box.y)).toBeLessThan(4);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});

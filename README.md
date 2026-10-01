@@ -42,18 +42,29 @@ Every point from the task brief, and where it's handled.
 |---|---|---|
 | 1 | **Generation:** enter a URL or text, generate in real time, show a preview | The preview re-renders on every keystroke (`useQrRenderer`). URLs without a scheme get `https://` added, and the hint shows the final link. |
 | 2 | **Types:** URL, plain text, email, phone, Wi-Fi, with the right inputs per type | All five, plus a sixth: **Contact** (a vCard 3.0 card: the **phone number is required**, and name, email, organisation and website are optional; without a name the card is named after the number, since vCard needs a display name; phones offer "Add to contacts", with RFC 2426 escaping and the name split into family/given). Six type tabs, each showing only its own fields (`ContentForm`). Encoders in `src/lib/qrTypes.ts`: `mailto:` with encoded subject/body, `tel:` normalised to E.164 digits, and the `WIFI:T:…;S:…;P:…;H:…;;` format with correct escaping of `; , : " \`. |
-| 3 | **Customisation:** size, foreground/background, error correction, margin, instant updates | Size 128–1024 px, code and background colours (picker + hex), L/M/Q/H error correction, and margin in *modules* (see design decisions). Every control updates the preview immediately. |
+| 3 | **Customisation:** size, foreground/background, error correction, margin, instant updates | Size 128–1024 px, code and background colours (a full in-house colour picker for any shade, plus a hex field), L/M/Q/H error correction, and margin in *modules* (see design decisions). Every control updates the preview immediately. |
 | 4 | **Presets:** predefined visual presets, editable afterwards | Six presets (Classic, Torii, Kehai Cyan, Print-safe, Sakura, Sumi Ink). A preset only sets appearance and every control stays editable. The panel shows when you've drifted to "Custom". |
 | 5 | **Download:** PNG that matches the preview | The preview canvas and the download come from the **same renderer instance**. An end-to-end test asserts the downloaded PNG is **pixel-identical** to the preview canvas. |
 | 6 | **Validation:** validate input, show clear errors | Per-type rules: URL shape and scheme, email address, phone digits (3–15, `+` only at the start), Wi-Fi SSID ≤ 32 bytes, WPA 8–63 chars or 64-hex, WEP 5/13 chars or 10/26 hex, length caps. Errors appear once a field is left, are announced to screen readers, and export stays disabled until the input is valid. |
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **87 unit/component tests** (Vitest) plus **41 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **90 unit/component tests** (Vitest) plus **45 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
 **Extras:** 🔗 **design links** (see below) · 🖼️ **drag-and-drop or paste** a logo · ✨ **automatic website logos** for URL codes (see below) · 📤 **Share** button on phones (native share sheet) · 🇯🇵 **English / 日本語** language toggle (see below).
+
+### Colour picker
+
+The browser's built-in `<input type="color">` looks and behaves very differently from browser to browser; Samsung Internet, for example, offers only a small fixed palette. So the studio has its own picker (`src/components/ColorInput.tsx`), and every device gets the same full control:
+
+- a **saturation × brightness square** and a **hue bar** cover all 16.7 million `#rrggbb` shades. Drag, tap, or drag past an edge to reach the extremes. A **hex field** takes exact values, and **quick swatches** hold the preset colours.
+- **Pick from screen** (EyeDropper API) appears only where the browser supports it (Chromium on desktop).
+- **Touch-first:** pointer events with pointer capture, and `touch-action: none` so dragging never scrolls the page. Changes are batched to one per animation frame, so the QR redraws smoothly while dragging.
+- **Keyboard and screen readers:** both controls are `role="slider"` with values announced. Arrow keys nudge (Shift for bigger steps), Escape closes and returns focus, and clicking outside closes it.
+- The picker works in HSV but stores hex. It keeps the hue you chose when you drag to grey or black, where hex alone can't remember one (`src/lib/color.ts`, unit-tested with a round-trip sweep of the colour cube).
+- **Tested:** e2e tests cover dragging to exact colours (verified in the downloaded PNG's pixels), the keyboard, typing a hex, closing on an outside click, touch on a phone with no page jump, and axe in both themes.
 
 ### Design links
 
@@ -244,8 +255,8 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 87 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 41 end-to-end tests in Chromium (desktop + Pixel 7)
+npm test             # 90 unit + component tests (Vitest, jsdom)
+npm run test:e2e     # 45 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 
