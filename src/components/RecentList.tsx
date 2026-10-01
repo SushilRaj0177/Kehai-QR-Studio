@@ -1,6 +1,7 @@
 import type { RecentEntry } from "../lib/history";
 import { KINDS } from "../lib/qrTypes";
 import { Icon } from "./icons";
+import { Glass } from "./Glass";
 import { useI18n } from "../i18n/I18nContext";
 import type { Translate } from "../i18n/i18n";
 
@@ -26,6 +27,7 @@ export function RecentList({ recent, onUse, onRemove, onClear }: Props) {
   const kindLabel = (k: string) => t(KINDS.find((x) => x.id === k)?.label ?? k);
   return (
     <section className="panel recent" aria-labelledby="recent-title">
+      <Glass />
       <div className="panel__head">
         <div>
           <span className="eyebrow">03 · {t("History")}</span>

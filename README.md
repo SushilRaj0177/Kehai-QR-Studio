@@ -251,16 +251,21 @@ There is one source of truth for the design, so the preview, the downloaded PNG 
 
 **Bundle splitting.** The first load needs React, the renderer and the app (~91 kB gzipped). The jsQR decoder (~48 kB gzipped) is only needed for the scan badge, so it's a separate chunk fetched in parallel with the first render (`useScanCheck`). React and the renderer are also separate chunks, so a redeploy of app code doesn't re-download them. Before this, everything was one 141 kB gzipped file.
 
-**Smooth scrolling (measured).** Real-phone testing showed small stutters while scrolling. The cause was `backdrop-filter: blur()` on the four large panels: every frame, the browser had to re-blur everything behind them, because the fixed background moves relative to the panels. The panels now use a near-opaque fill that looks the same, only the small sticky top bar keeps its blur, and the fixed background sits on its own compositor layer (`transform: translateZ(0)`, `contain: strict`), so it's never repainted.
+**Smooth scrolling without losing the frosted glass (measured).** Real-phone testing showed small stutters while scrolling. The cause was `backdrop-filter: blur()` on the four large panels: the background is `position: fixed`, so it moves relative to the panels, and the browser re-blurred everything behind every panel on every frame. Shrinking the blur or promoting layers didn't help enough (best case ~49 fps), and removing the effect wasn't an option, so the blur is now **baked once**:
 
-Measured scrolling a 412 px-wide page with the CPU throttled 4× (frame times via `requestAnimationFrame`):
+- `useFrost` draws the page background (both glows and the big 符) into a small canvas, blurred, for **both themes**, at load. It redraws only when the viewport *width* changes, never during scrolling (mobile URL bars change the height mid-scroll).
+- Each panel contains a `<Glass>`: a `position: fixed` layer showing that image, aligned with the real background, clipped to the panel by `clip-path: inset(0 round r)`. While scrolling, the compositor only moves a clip over a texture, with no blur work per frame.
+- The result is visually identical to the live blur (checked by side-by-side screenshots in both themes). The small sticky top bar keeps a real blur because it's cheap. The fixed background sits on its own compositor layer.
+
+Measured scrolling a 412 px-wide page with the CPU throttled 4× (frame times via `requestAnimationFrame`, 3 runs each):
 
 | | fps | janky frames (>25 ms) | worst frame |
 |---|---|---|---|
-| Before | ~43 | ~40 of 116 | 50 ms |
-| After | **60** | **0–1** | 17 ms |
+| Live `backdrop-filter` on panels | ~43 | ~40 of 116 | 50 ms |
+| Smaller blur radius (6 px) | ~49 | ~24 of 116 | — |
+| **Baked glass** | **60** | **0** | 17 ms |
 
-An e2e guard fails if any element other than the top bar gets a backdrop blur again.
+Guards (e2e): only the top bar may use a live backdrop blur; every panel holding a `<Glass>` must be a positioned box (otherwise the fixed layer escapes and covers the page, a bug found while building this); and the baked images must exist for both themes.
 
 **Works offline.** A small hand-written service worker (`public/sw.js`) serves pages network-first, falling back to the cached copy offline, and hashed `/assets/*` files cache-first (they can never be stale). It never touches cross-origin requests. After one visit the whole studio runs offline, including the scan check and downloads, and a web manifest makes it installable to a home screen. This is covered by an e2e test that reloads with the network switched off, makes a code and decodes the download.
 

@@ -4,6 +4,7 @@ import { DesignPanel } from "./components/DesignPanel";
 import { Preview } from "./components/Preview";
 import { RecentList } from "./components/RecentList";
 import { KehaiCallout } from "./components/KehaiCallout";
+import { Glass } from "./components/Glass";
 import { Icon } from "./components/icons";
 import { useQrRenderer } from "./hooks/useQrRenderer";
 import { useScanCheck } from "./hooks/useScanCheck";
@@ -11,6 +12,7 @@ import { useTheme } from "./hooks/useTheme";
 import { useRecent } from "./hooks/useRecent";
 import { useSiteLogo } from "./hooks/useSiteLogo";
 import { usePressRipple } from "./hooks/usePressRipple";
+import { useFrost } from "./hooks/useFrost";
 import { DEFAULT_DESIGN, PRESETS, applyPreset, matchingPreset, type QrDesign } from "./lib/design";
 import { DEFAULT_FIELDS, KINDS, describe, encode, validate, type AllFields, type QrKind } from "./lib/qrTypes";
 import { analyze } from "./lib/readability";
@@ -36,6 +38,7 @@ export default function App() {
   const { t, lang, setLang } = i18n;
   const { theme, toggle } = useTheme();
   usePressRipple();
+  useFrost();
   const { recent, add, remove, clear } = useRecent();
 
   // A design link (#d=…) opens straight into its state, with no flash of the defaults.
@@ -344,6 +347,7 @@ export default function App() {
 
       <main className="layout" id="studio">
         <section className="panel panel--content" aria-labelledby="content-title">
+          <Glass />
           <div className="panel__head">
             <div>
               <span className="eyebrow">01 · {t("Content")}</span>
@@ -362,6 +366,7 @@ export default function App() {
         </section>
 
         <aside className="panel panel--preview" aria-label={t("{kind} QR preview", { kind: kindLabel })}>
+          <Glass />
           <Preview
             containerRef={containerRef}
             payload={payload}
@@ -382,6 +387,7 @@ export default function App() {
         </aside>
 
         <section className="panel panel--design" aria-labelledby="design-title">
+          <Glass />
           <div className="panel__head">
             <div>
               <span className="eyebrow">02 · {t("Design")}</span>

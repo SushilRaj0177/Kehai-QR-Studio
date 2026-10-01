@@ -177,6 +177,44 @@ code {
   user-select: none;
 }
 
+/* Pre-blurred copy of the backdrop, revealed inside each panel. The clip
+   on .glass also clips its position:fixed child, so the blurred layer
+   lines up exactly with the real background while the page scrolls. */
+.glass {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--panel-r);
+  clip-path: inset(0 round var(--panel-r));
+  pointer-events: none;
+}
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+}
+.backdrop--frost {
+  z-index: -1;
+  /* No own layer here: Chromium doesn't apply an ancestor's clip-path to a
+     promoted fixed layer, which would let it cover the page. */
+  transform: none;
+  will-change: auto;
+  contain: none;
+  /* Opaque, like a real backdrop blur: it replaces what's behind. Until the
+     baked image is ready, the plain gradients stand in (nearly identical). */
+  background:
+    radial-gradient(900px 520px at 12% -10%, var(--bg-glow-1), transparent 60%),
+    radial-gradient(800px 600px at 100% 110%, var(--bg-glow-2), transparent 60%),
+    var(--bg);
+}
+[data-theme="dark"] .backdrop--frost {
+  background: var(--frost-dark, none) top left / 100vw auto no-repeat, var(--bg);
+}
+[data-theme="light"] .backdrop--frost {
+  background: var(--frost-light, none) top left / 100vw auto no-repeat, var(--bg);
+}
+
 /* ---------------------------------------------------------------- topbar */
 
 .topbar {
@@ -403,7 +441,11 @@ html[lang="ja"] .kind-tab__label {
   min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--panel-bg);
+  /* Frosted look via <Glass> (pre-blurred background), not backdrop-filter:
+     see the .glass rules below. */
+  position: relative;
+  isolation: isolate;
+  --panel-r: var(--radius-lg);
   box-shadow: var(--shadow);
   padding: 22px;
 }
@@ -1571,7 +1613,8 @@ html[lang="ja"] .stress__label {
       "recent";
   }
   .panel--preview {
-    position: static;
+    position: relative; /* not sticky on phones; must stay positioned for <Glass> */
+    top: auto; /* the sticky offset would shift a relative box */
   }
   .preview__stage {
     max-width: 420px;
@@ -1601,6 +1644,7 @@ html[lang="ja"] .stress__label {
   .panel {
     padding: 16px;
     border-radius: 18px;
+    --panel-r: 18px;
   }
   .kind-tabs {
     grid-template-columns: repeat(3, minmax(0, 1fr)); /* 2 rows of 3 on phones */

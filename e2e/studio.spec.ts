@@ -378,7 +378,7 @@ test("a broken text-page link shows a friendly message", async ({ page }) => {
   await expect(page.getByText("This link doesn't contain a message.")).toBeVisible();
 });
 
-test("scroll performance guard: only the small sticky top bar uses a backdrop blur", async ({ page }) => {
+test("scroll performance guard: frosted panels use baked glass, not a live backdrop blur", async ({ page }) => {
   await page.getByLabel("Website URL").fill("gdg.community.dev");
   await expectScanState(page, "good");
   const blurred = await page.evaluate(() =>
@@ -390,4 +390,16 @@ test("scroll performance guard: only the small sticky top bar uses a backdrop bl
       .map((el) => el.className),
   );
   expect(blurred).toEqual(["topbar"]);
+
+  // Each panel's glass must stay inside its panel: the panel has to be a
+  // positioned box, or the pre-blurred layer would cover the page.
+  const panels = await page.evaluate(() =>
+    Array.from(document.querySelectorAll(".glass")).map((g) => getComputedStyle(g.parentElement!).position),
+  );
+  expect(panels.length).toBe(4);
+  for (const p of panels) expect(p).not.toBe("static");
+  // The baked frost images exist for both themes.
+  await expect
+    .poll(() => page.evaluate(() => ["dark", "light"].map((t) => document.documentElement.style.getPropertyValue(`--frost-${t}`).startsWith('url("data:image/png'))))
+    .toEqual([true, true]);
 });
