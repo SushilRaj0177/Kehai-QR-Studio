@@ -6,6 +6,7 @@
  * Everything here is pure (no DOM, no React) so it is fully unit-tested.
  */
 import { en, type Translate } from "../i18n/i18n";
+import { textPageUrl } from "./textPage";
 
 export type QrKind = "url" | "text" | "email" | "phone" | "wifi" | "contact";
 
@@ -16,6 +17,8 @@ export interface UrlFields {
 }
 export interface TextFields {
   text: string;
+  /** Encode a link to a page that shows the text (opens in every camera app) instead of the raw text. */
+  asPage: boolean;
 }
 export interface EmailFields {
   address: string;
@@ -66,7 +69,7 @@ export const KINDS: { id: QrKind; label: string; hint: string }[] = [
 
 export const DEFAULT_FIELDS: AllFields = {
   url: { url: "" },
-  text: { text: "" },
+  text: { text: "", asPage: true },
   email: { address: "", subject: "", body: "" },
   phone: { phone: "" },
   wifi: { ssid: "", password: "", security: "WPA", hidden: false },
@@ -265,8 +268,10 @@ export function encode<K extends QrKind>(kind: K, fields: FieldsByKind[K]): stri
   switch (kind) {
     case "url":
       return normalizeUrl((fields as UrlFields).url);
-    case "text":
-      return (fields as TextFields).text;
+    case "text": {
+      const f = fields as TextFields;
+      return f.asPage ? textPageUrl(f.text) : f.text;
+    }
     case "email":
       return encodeEmail(fields as EmailFields);
     case "phone":

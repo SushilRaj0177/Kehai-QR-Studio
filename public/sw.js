@@ -7,8 +7,10 @@
  *   so a cached asset can never be stale.
  * - Anything cross-origin (the favicon services) is left alone.
  */
-const CACHE = "kqs-v1";
+const CACHE = "kqs-v2";
 const SHELL = "/";
+// Each page is cached under its own path (the studio, and /t/ for text codes).
+const pageKey = (url) => new URL(url).pathname;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.add(SHELL)).then(() => self.skipWaiting()));
@@ -29,14 +31,15 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate") {
+    const key = pageKey(request.url);
     event.respondWith(
       fetch(request)
         .then((res) => {
           const copy = res.clone();
-          if (res.ok) caches.open(CACHE).then((c) => c.put(SHELL, copy));
+          if (res.ok) caches.open(CACHE).then((c) => c.put(key, copy));
           return res;
         })
-        .catch(() => caches.match(SHELL)),
+        .catch(() => caches.match(key).then((hit) => hit || caches.match(SHELL))),
     );
     return;
   }

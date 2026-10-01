@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **93 unit/component tests** (Vitest) plus **48 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **95 unit/component tests** (Vitest) plus **49 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -72,6 +72,21 @@ The browser's built-in `<input type="color">` looks and behaves very differently
 - **Every pressable element** (buttons, tabs, chips, presets, swatches) springs down when pressed and back with a slight overshoot. A **ripple** spreads from the exact press point (`usePressRipple`: one delegated `pointerdown` listener, and the ripple span removes itself).
 - **No browser tap flash:** `-webkit-tap-highlight-color: transparent` removes the blue/grey rectangle mobile browsers draw on tapped elements. Focus rings on radio-based controls use `:has(:focus-visible)`, so they show for keyboard users but not after a tap.
 - **Reduced motion** (OS setting) turns all of this off.
+
+### Text codes that open as a page
+
+Real-device testing showed a problem with plain-text QR codes: many camera apps do nothing useful with raw text. Google Lens, for example, offers "Search barcode", an image search, and never shows the message. So by default a **Text** code now holds a link to a tiny page that displays the text:
+
+```
+https://kehai-qr-studio.vercel.app/t/#UHJldHRpZXN0IHNvdWwhIDwz
+                                      └─ the text, UTF-8 → base64url
+```
+
+- **Every camera app opens links**, so every scanner shows the message, on a clean page with **Copy** and **Share** buttons and tappable links. It follows the system light/dark theme, or your saved one, and switches to Japanese on Japanese phones.
+- **Still no server or database.** The text lives in the URL **fragment** (after `#`), which browsers never send to a server. `/t/` is a static page (a second Vite entry, `t/index.html` + `src/viewer/`, ~3 kB JS, no React) that reads the fragment in the browser.
+- **Safe with hostile input:** the text is inserted with `textContent` only, never as HTML, and only `http(s)` links become clickable (with `rel="noopener noreferrer nofollow"`). An e2e test scans a code containing an `<img onerror>` payload and checks it shows as text and never runs.
+- **Trade-offs, stated in the UI:** the scanner needs internet, and the code is a little denser (base64 adds about a third). One checkbox switches back to **raw text**, which works offline but leaves the display to the scanner app. Recent codes saved before this change stay raw text.
+- The service worker caches each page under its own path, so `/t/` also works offline after a visit.
 
 ### Design links
 
@@ -227,6 +242,7 @@ src/
 │   └── I18nContext.tsx     Language state + context, rich() for inline markup
 ├── components/             ContentForm, DesignPanel, Preview, RecentList, KehaiCallout, …
 └── App.tsx                 State wiring
+t/index.html, src/viewer/    The /t/ page that shows a text code's message (plain DOM, ~3 kB)
 e2e/                        Playwright: behaviour, responsive layout, README screenshots
 ```
 
@@ -266,8 +282,8 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 93 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 48 end-to-end tests in Chromium (desktop + Pixel 7)
+npm test             # 95 unit + component tests (Vitest, jsdom)
+npm run test:e2e     # 49 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 

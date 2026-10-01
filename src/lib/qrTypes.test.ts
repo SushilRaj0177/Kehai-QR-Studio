@@ -46,13 +46,15 @@ describe("URL", () => {
 
 describe("Text", () => {
   it("requires content", () => {
-    expect(validateText({ text: "  " }).text).toBeTruthy();
+    expect(validateText({ text: "  ", asPage: false }).text).toBeTruthy();
   });
   it("caps the length", () => {
-    expect(validateText({ text: "a".repeat(MAX_TEXT_LENGTH + 1) }).text).toMatch(/under/);
+    expect(validateText({ text: "a".repeat(MAX_TEXT_LENGTH + 1), asPage: false }).text).toMatch(/under/);
   });
   it("encodes text verbatim, including unicode", () => {
-    expect(encode("text", { text: "こんにちは 🌸" })).toBe("こんにちは 🌸");
+    expect(encode("text", { text: "こんにちは 🌸", asPage: false })).toBe("こんにちは 🌸");
+    // Page mode: a link to /t/ carrying the text in the fragment.
+    expect(encode("text", { text: "hi", asPage: true })).toMatch(/^https?:\/\/[^/]+\/t\/#aGk$/);
   });
 });
 

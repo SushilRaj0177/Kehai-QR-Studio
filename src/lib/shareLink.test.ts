@@ -7,7 +7,7 @@ const b64 = (o: unknown) => LINK_PREFIX + btoa(JSON.stringify(o));
 describe("design links", () => {
   it("round-trip type, content (including UTF-8) and design", () => {
     const design = applyPreset(DEFAULT_DESIGN, PRESETS[1]);
-    const fields = { text: "GDG · こんにちは 🌸" };
+    const fields = { text: "GDG · こんにちは 🌸", asPage: true };
     const link = encodeShareLink("text", fields, design);
     expect(link).toMatch(/^#d=[A-Za-z0-9_-]+$/); // URL-safe
     expect(decodeShareLink(link)).toEqual({ kind: "text", fields, design });

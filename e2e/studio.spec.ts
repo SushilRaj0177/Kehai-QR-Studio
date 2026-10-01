@@ -16,7 +16,10 @@ test.describe("every QR type generates, downloads and scans back correctly", () 
     },
     {
       kind: "Text",
-      fill: (p) => p.getByLabel("Text", { exact: true }).fill("GDG on Campus SRM · こんにちは 🌸"),
+      fill: async (p) => {
+        await p.getByTestId("text-as-page").uncheck(); // raw text mode
+        await p.getByLabel("Text", { exact: true }).fill("GDG on Campus SRM · こんにちは 🌸");
+      },
       expected: "GDG on Campus SRM · こんにちは 🌸",
     },
     {
@@ -341,9 +344,36 @@ test("the theme switch is a circular reveal from the button, never a grey cross-
   expect(await page.evaluate(() => (window as unknown as { __vt: number }).__vt)).toBe(1);
 });
 
-test("the Text tab explains that some camera apps only react to links", async ({ page }) => {
+test("text codes open as a page by default, showing the exact text", async ({ page, context }) => {
   await pickKind(page, "Text");
-  await expect(page.getByTestId("text-scan-note")).toContainText("Google Lens");
-  await pickKind(page, "URL");
-  await expect(page.getByTestId("text-scan-note")).toHaveCount(0);
+  await expect(page.getByTestId("text-as-page")).toBeChecked();
+  await expect(page.getByTestId("text-scan-note")).toContainText("Every camera app opens it");
+  const message = 'Prettiest soul! <3\nこんにちは 🌸 <img src=x onerror="window.__xss=1"> https://gdg.community.dev';
+  await page.getByLabel("Text", { exact: true }).fill(message);
+  await expectScanState(page, "good");
+
+  // The code holds a link to /t/ — readable by both decoders.
+  const { buffer } = await downloadVia(page, /Download PNG/);
+  const link = decodePng(buffer).text!;
+  expect(link).toMatch(/^http:\/\/localhost:\d+\/t\/#[A-Za-z0-9_-]+$/);
+  expect(await zxingDecode(buffer)).toBe(link);
+
+  // Opening it shows the text exactly, as text (the markup never runs).
+  const viewer = await context.newPage();
+  await viewer.goto(link);
+  await expect(viewer.getByTestId("viewer-text")).toHaveText(message);
+  expect(await viewer.locator("[data-testid=viewer-text] img").count()).toBe(0);
+  expect(await viewer.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined();
+  await expect(viewer.getByRole("link", { name: "https://gdg.community.dev" })).toHaveAttribute("rel", /noopener/);
+  await expect(viewer).toHaveTitle(/Prettiest soul/);
+
+  // Raw mode is one click away and explains the trade-off.
+  await page.getByTestId("text-as-page").uncheck();
+  await expect(page.getByTestId("text-scan-note")).toContainText("Search barcode");
+  await expect(page.getByTestId("payload")).toHaveText(message);
+});
+
+test("a broken text-page link shows a friendly message", async ({ page }) => {
+  await page.goto("/t/#not-a-valid-message!");
+  await expect(page.getByText("This link doesn't contain a message.")).toBeVisible();
 });

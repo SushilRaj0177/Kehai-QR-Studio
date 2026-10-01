@@ -92,9 +92,22 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
           </Field>
         )}
         {kind === "text" && (
-          <p className="kind-note" data-testid="text-scan-note">
-            {t("Some phone camera apps only pop up for links, so plain text can look like it “didn't scan”. Google Lens or any QR scanner app shows the text.")}
-          </p>
+          <>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={fields.text.asPage}
+                onChange={(e) => onChange("text", { asPage: e.target.checked })}
+                data-testid="text-as-page"
+              />
+              <span>{t("Open as a page when scanned (recommended)")}</span>
+            </label>
+            <p className="kind-note" data-testid="text-scan-note">
+              {fields.text.asPage
+                ? t("Every camera app opens it: scanning shows your text on a clean page. The text travels inside the link itself — nothing is uploaded — but the scanner needs internet.")
+                : t("Raw text works offline, but many camera apps only offer an image search for it (Google Lens shows “Search barcode”). A QR scanner app shows the text.")}
+            </p>
+          </>
         )}
 
         {kind === "email" && (

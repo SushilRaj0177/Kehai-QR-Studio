@@ -232,7 +232,9 @@ export default function App() {
   const onUse = useCallback(
     (entry: RecentEntry) => {
       setKind(entry.kind);
-      setFields((f) => ({ ...f, [entry.kind]: { ...DEFAULT_FIELDS[entry.kind], ...entry.fields } }));
+      // Text codes saved before page mode existed were raw text: keep them that way.
+      const legacy = entry.kind === "text" && !("asPage" in entry.fields) ? { asPage: false } : {};
+      setFields((f) => ({ ...f, [entry.kind]: { ...DEFAULT_FIELDS[entry.kind], ...legacy, ...entry.fields } }));
       setDesign({ ...DEFAULT_DESIGN, ...entry.design, logo: { ...DEFAULT_DESIGN.logo, ...entry.design.logo } });
       setTouched(new Set());
       notify({ tone: "info", text: t("Loaded “{label}” — edit away.", { label: entry.label || t("code") }) });

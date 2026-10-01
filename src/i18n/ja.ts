@@ -76,8 +76,11 @@ export const JA: Record<string, string> = {
   "Will open {url}": "{url} を開きます",
   "Paste a link — https:// is added if you leave it out.": "リンクを貼り付けてください。https:// は省略しても自動で付きます。",
   "{n} characters · shown as-is when scanned": "{n} 文字 · 読み取るとそのまま表示されます",
-  "Some phone camera apps only pop up for links, so plain text can look like it “didn't scan”. Google Lens or any QR scanner app shows the text.":
-    "スマホのカメラアプリによってはリンクにしか反応しないため、テキストは「読み取れない」ように見えることがあります。Google レンズや QR コードリーダーアプリならテキストが表示されます。",
+  "Open as a page when scanned (recommended)": "読み取るとページで表示する（おすすめ）",
+  "Every camera app opens it: scanning shows your text on a clean page. The text travels inside the link itself — nothing is uploaded — but the scanner needs internet.":
+    "どのカメラアプリでも開けます。読み取るとテキストが見やすいページに表示されます。テキストはリンクの中にだけ含まれ、どこにもアップロードされません（読み取る側にはインターネット接続が必要です）。",
+  "Raw text works offline, but many camera apps only offer an image search for it (Google Lens shows “Search barcode”). A QR scanner app shows the text.":
+    "テキストのままならオフラインでも使えますが、多くのカメラアプリでは画像検索しか表示されません（Google レンズでは「バーコードを検索」）。QR コードリーダーアプリならテキストが表示されます。",
   "Anything — a note, a code, a message…": "メモ、コード、メッセージなど何でも…",
   To: "宛先",
   Subject: "件名",
