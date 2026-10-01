@@ -853,6 +853,16 @@ input[type="range"] {
   text-transform: lowercase;
 }
 
+.kind-note {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-left: 2px solid var(--kehai);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: color-mix(in srgb, var(--kehai) 7%, transparent);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
 .gradient-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

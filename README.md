@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **93 unit/component tests** (Vitest) plus **47 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **93 unit/component tests** (Vitest) plus **48 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -164,6 +164,8 @@ All six presets pass all three. Grey-on-white fails *Dim light*, and a 400-chara
 
 **Failure isolation:** if the checker itself can't run (the decoder fails to load, or canvas isn't available), the badge says *"Couldn't run the scan check"*, never *"Won't scan"*: a broken tool must not condemn a good code. The stress test is an extra; if it fails on some browser, the verified result stands without the chips. Unit-tested with a mocked decoder.
 
+**Plain text and camera apps:** a valid text code can still look like it "didn't scan", because some built-in phone camera apps only pop up for actionable content (links, Wi-Fi, contacts). The Text tab says so and points to Google Lens or a scanner app. This was found in real-device testing: the codes themselves decode correctly in both jsQR and ZXing.
+
 ### 2. Readability analysis
 
 A decoder reading a perfect digital image is far more forgiving than a phone camera at an angle in dim light.
@@ -265,13 +267,13 @@ Requires Node 18+.
 
 ```bash
 npm test             # 93 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 47 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 48 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 ```
 
 What the end-to-end suite verifies, in a real browser:
 
-- **Every type** (URL, text including UTF-8/emoji, email, phone, Wi-Fi with special characters, vCard contact) is downloaded as PNG and **decoded back to the exact payload**.
+- **Every type** (URL, text including UTF-8/emoji, email, phone, Wi-Fi with special characters, vCard contact) is decoded by **two independent decoders**: jsQR, and ZXing (zxing-cpp via `zxing-wasm`, the engine most Android scanner apps use); is downloaded as PNG and **decoded back to the exact payload**.
 - The **downloaded PNG is pixel-identical** to the preview.
 - **Size, colours, error correction and margin** change the output immediately. Size and colour are checked in the downloaded file itself.
 - **Presets** apply and stay editable. **Invalid input** shows errors and blocks export. **Risky designs** raise warnings.

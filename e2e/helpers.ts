@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { PNG } from "pngjs";
 import jsQR from "jsqr";
+import { readBarcodes } from "zxing-wasm/reader";
 import { expect, type Download, type Page } from "@playwright/test";
 
 export interface DecodedPng {
@@ -86,4 +87,13 @@ export async function stubSiteLogos(page: Page, logo?: Buffer | ((url: string) =
     });
   });
   return requests;
+}
+
+/**
+ * Decode with ZXing (zxing-cpp compiled to WASM), the engine behind most
+ * Android scanner apps: a second, independent opinion next to jsQR.
+ */
+export async function zxingDecode(buffer: Buffer): Promise<string | null> {
+  const [hit] = await readBarcodes(new Blob([new Uint8Array(buffer)]), { formats: ["QRCode"], tryHarder: false });
+  return hit?.text ?? null;
 }

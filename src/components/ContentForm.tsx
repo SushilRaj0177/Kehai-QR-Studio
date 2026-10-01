@@ -91,6 +91,11 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
             )}
           </Field>
         )}
+        {kind === "text" && (
+          <p className="kind-note" data-testid="text-scan-note">
+            {t("Some phone camera apps only pop up for links, so plain text can look like it “didn't scan”. Google Lens or any QR scanner app shows the text.")}
+          </p>
+        )}
 
         {kind === "email" && (
           <>

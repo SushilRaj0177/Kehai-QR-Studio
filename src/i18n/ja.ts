@@ -76,6 +76,8 @@ export const JA: Record<string, string> = {
   "Will open {url}": "{url} を開きます",
   "Paste a link — https:// is added if you leave it out.": "リンクを貼り付けてください。https:// は省略しても自動で付きます。",
   "{n} characters · shown as-is when scanned": "{n} 文字 · 読み取るとそのまま表示されます",
+  "Some phone camera apps only pop up for links, so plain text can look like it “didn't scan”. Google Lens or any QR scanner app shows the text.":
+    "スマホのカメラアプリによってはリンクにしか反応しないため、テキストは「読み取れない」ように見えることがあります。Google レンズや QR コードリーダーアプリならテキストが表示されます。",
   "Anything — a note, a code, a message…": "メモ、コード、メッセージなど何でも…",
   To: "宛先",
   Subject: "件名",

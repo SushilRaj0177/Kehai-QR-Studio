@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { decodePng, downloadVia, expectScanState, makeLogoPng, pickKind, previewPng, stubSiteLogos } from "./helpers";
+import { decodePng, downloadVia, expectScanState, makeLogoPng, pickKind, previewPng, stubSiteLogos, zxingDecode } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   // No real favicon lookups: the site-logo feature has its own tests below.
@@ -65,6 +65,8 @@ test.describe("every QR type generates, downloads and scans back correctly", () 
       expect(name).toMatch(/^qr-.*\.png$/);
       const png = decodePng(buffer);
       expect(png.text).toBe(c.expected);
+      // And by ZXing, the decoder most Android scanners use.
+      expect(await zxingDecode(buffer)).toBe(c.expected);
     });
   }
 });
@@ -337,4 +339,11 @@ test("the theme switch is a circular reveal from the button, never a grey cross-
   await page.getByTestId("theme-toggle").click();
   await expect(page.locator("html")).not.toHaveAttribute("data-theme", before!);
   expect(await page.evaluate(() => (window as unknown as { __vt: number }).__vt)).toBe(1);
+});
+
+test("the Text tab explains that some camera apps only react to links", async ({ page }) => {
+  await pickKind(page, "Text");
+  await expect(page.getByTestId("text-scan-note")).toContainText("Google Lens");
+  await pickKind(page, "URL");
+  await expect(page.getByTestId("text-scan-note")).toHaveCount(0);
 });
