@@ -215,21 +215,6 @@ code {
   background: var(--frost-light, none) top left / 100vw auto no-repeat, var(--bg);
 }
 
-/* Desktop only: the pinned preview slides *under* the Recent codes panel at
-   the bottom of the page, and that panel shows it frosted. Baked glass can
-   only show the background, so this one panel keeps the live blur there
-   (desktop GPUs handle a single panel easily; on phones nothing overlaps). */
-@media (min-width: 861px) {
-  .panel.recent {
-    background: var(--surface);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-  }
-  .panel.recent > .glass {
-    display: none;
-  }
-}
-
 /* ---------------------------------------------------------------- topbar */
 
 .topbar {
@@ -427,11 +412,16 @@ html[lang="ja"] .kind-tab__label {
 .layout {
   display: grid;
   gap: 18px;
+}
+/* The pinned (sticky) preview can only travel within its containing grid:
+   keeping recent codes outside it stops the preview above that panel. */
+.layout__main {
+  display: grid;
+  gap: 18px;
   grid-template-columns: minmax(0, 1fr) 400px;
   grid-template-areas:
     "content preview"
-    "design  preview"
-    "recent  recent";
+    "design  preview";
   align-items: start;
 }
 .panel--content {
@@ -449,11 +439,8 @@ html[lang="ja"] .kind-tab__label {
   position: sticky;
   top: 86px;
 }
-.layout__recent {
-  grid-area: recent;
-}
-
-.layout > * {
+.layout > *,
+.layout__main > * {
   min-width: 0; /* grid items default to min-width:auto and grow with wide content */
 }
 .panel {
@@ -1612,7 +1599,7 @@ html[lang="ja"] .stress__label {
 /* ---------------------------------------------------------------- responsive */
 
 @media (max-width: 1060px) {
-  .layout {
+  .layout__main {
     grid-template-columns: minmax(0, 1fr) 360px;
   }
   .presets {
@@ -1623,13 +1610,12 @@ html[lang="ja"] .stress__label {
 @media (max-width: 860px) {
   /* Single column: content, then the live preview, then design, so the
      result is always right under the inputs on a phone. */
-  .layout {
+  .layout__main {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "content"
       "preview"
-      "design"
-      "recent";
+      "design";
   }
   .panel.panel--preview {
     position: relative; /* not sticky on phones; must stay positioned for <Glass> */

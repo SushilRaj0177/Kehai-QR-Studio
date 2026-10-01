@@ -48,8 +48,8 @@ Every point from the task brief, and where it's handled.
 | 6 | **Validation:** validate input, show clear errors | Per-type rules: URL shape and scheme, email address, phone digits (3–15, `+` only at the start), Wi-Fi SSID ≤ 32 bytes, WPA 8–63 chars or 64-hex, WEP 5/13 chars or 10/26 hex, length caps. Errors appear once a field is left, are announced to screen readers, and export stays disabled until the input is valid. |
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
-| 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop. On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **95 unit/component tests** (Vitest) plus **50 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop; the preview stays pinned only alongside the content and design panels and stops above Recent codes, rather than sliding under them (the working panels have their own grid, `.layout__main`). On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **95 unit/component tests** (Vitest) plus **51 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -265,9 +265,7 @@ Measured scrolling a 412 px-wide page with the CPU throttled 4× (frame times vi
 | Smaller blur radius (6 px) | ~49 | ~24 of 116 | — |
 | **Baked glass** | **60** | **0** | 17 ms |
 
-**One exception, on purpose:** on desktop the pinned preview slides *under* the Recent codes panel at the bottom of the page, and the original design shows it frosted there. Baked glass can only show the background, so on screens wider than 860 px that one panel keeps the live blur (cheap on desktop GPUs; on phones nothing overlaps).
-
-Guards (e2e): only the top bar (plus the Recent panel on desktop) may use a live backdrop blur; every panel holding a `<Glass>` must be a positioned box (otherwise the fixed layer escapes and covers the page, a bug found while building this); and the baked images must exist for both themes.
+Guards (e2e): only the top bar may use a live backdrop blur; every panel holding a `<Glass>` must be a positioned box (otherwise the fixed layer escapes and covers the page, a bug found while building this); and the baked images must exist for both themes.
 
 **Works offline.** A small hand-written service worker (`public/sw.js`) serves pages network-first, falling back to the cached copy offline, and hashed `/assets/*` files cache-first (they can never be stale). It never touches cross-origin requests. After one visit the whole studio runs offline, including the scan check and downloads, and a web manifest makes it installable to a home screen. This is covered by an e2e test that reloads with the network switched off, makes a code and decodes the download.
 
@@ -301,7 +299,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 95 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 50 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 51 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 npm run test:visual  # pixel comparison against the approved look (14 screenshots)
 ```

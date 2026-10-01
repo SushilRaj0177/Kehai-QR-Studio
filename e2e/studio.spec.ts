@@ -389,10 +389,7 @@ test("scroll performance guard: frosted panels use baked glass, not a live backd
       })
       .map((el) => el.className),
   );
-  // Desktop: the Recent panel keeps a live blur because the pinned preview
-  // slides under it; phones (single column) only blur the top bar.
-  const wide = (page.viewportSize()?.width ?? 0) > 860;
-  expect(blurred).toEqual(wide ? ["topbar", "panel recent"] : ["topbar"]);
+  expect(blurred).toEqual(["topbar"]);
 
   // Each panel's glass must stay inside its panel: the panel has to be a
   // positioned box, or the pre-blurred layer would cover the page.
@@ -405,4 +402,16 @@ test("scroll performance guard: frosted panels use baked glass, not a live backd
   await expect
     .poll(() => page.evaluate(() => ["dark", "light"].map((t) => document.documentElement.style.getPropertyValue(`--frost-${t}`).startsWith('url("data:image/png'))))
     .toEqual([true, true]);
+});
+
+test("desktop: the pinned preview stops above Recent codes instead of sliding under it", async ({ page }) => {
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(300);
+  const [preview, recent] = await Promise.all([
+    page.locator(".panel--preview").boundingBox(),
+    page.locator(".panel.recent").boundingBox(),
+  ]);
+  expect(preview!.y + preview!.height).toBeLessThanOrEqual(recent!.y);
 });

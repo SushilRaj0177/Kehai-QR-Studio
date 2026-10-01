@@ -346,6 +346,9 @@ export default function App() {
       </section>
 
       <main className="layout" id="studio">
+        {/* Own grid for the three working panels, so the pinned preview stops
+            at the end of this block instead of sliding under Recent codes. */}
+        <div className="layout__main">
         <section className="panel panel--content" aria-labelledby="content-title">
           <Glass />
           <div className="panel__head">
@@ -409,6 +412,7 @@ export default function App() {
             onRestoreSiteLogo={siteLogo.restore}
           />
         </section>
+        </div>
 
         <div className="layout__recent">
           <RecentList recent={recent} onUse={onUse} onRemove={remove} onClear={clear} />
