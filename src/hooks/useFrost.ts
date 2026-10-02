@@ -75,8 +75,9 @@ export function useFrost() {
   useEffect(() => {
     let width = 0;
     let timer: number | undefined;
+    let live = true;
     const build = () => {
-      if (window.innerWidth === width) return;
+      if (!live || window.innerWidth === width) return;
       width = window.innerWidth;
       // Size to the larger viewport so a hiding URL bar never exposes an edge.
       const h = Math.max(window.innerHeight, window.screen?.height || 0);
@@ -95,6 +96,7 @@ export function useFrost() {
     };
     window.addEventListener("resize", onResize);
     return () => {
+      live = false;
       window.removeEventListener("resize", onResize);
       window.clearTimeout(timer);
     };

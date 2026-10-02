@@ -48,6 +48,7 @@ export const JA: Record<string, string> = {
   "This browser doesn't allow copying images — use Download instead.": "このブラウザでは画像をコピーできません。ダウンロードをご利用ください。",
   "Couldn't copy or share the image — use Download instead.": "画像をコピーも共有もできませんでした。ダウンロードをご利用ください。",
   "Sharing failed — use Download instead.": "共有に失敗しました。ダウンロードをご利用ください。",
+  "Couldn't save this code — try again.": "コードを保存できませんでした。もう一度お試しください。",
   "Saved to recent codes.": "最近のコードに保存しました。",
   "Loaded “{label}” — edit away.": "「{label}」を読み込みました。自由に編集できます。",
   code: "コード",

@@ -116,3 +116,19 @@ describe("presets", () => {
     await vi.waitFor(() => expect(within(ec).getByLabelText(/H/)).toBeChecked());
   });
 });
+
+describe("number fields", () => {
+  it("lets you type a size digit by digit, clamping only when you leave the box", async () => {
+    const user = setup();
+    const size = screen.getByLabelText("Size value");
+    await user.clear(size);
+    await user.type(size, "256");
+    expect(size).toHaveValue(256); // not clamped to 128 at the first "2"
+    expect(screen.getByText(/256 × 256 px/)).toBeInTheDocument();
+
+    await user.clear(size);
+    await user.type(size, "5000");
+    await user.tab();
+    expect(size).toHaveValue(1024); // out of range: clamped on blur
+  });
+});

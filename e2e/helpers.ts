@@ -25,7 +25,6 @@ export async function readDownload(download: Download): Promise<Buffer> {
   return readFileSync(path);
 }
 
-/** Click a download button and return the file's bytes + suggested name. */
 /** Download through the Download menu: "png" (picture) or "svg" (vector). */
 export async function downloadVia(page: Page, format: "png" | "svg") {
   await page.getByTestId("download").click();

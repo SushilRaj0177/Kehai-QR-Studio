@@ -108,6 +108,11 @@ function DownloadMenu({ disabled, busy, onDownload }: { disabled: boolean; busy:
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const itemsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
+  // Close if the button becomes unavailable (input cleared, another export running).
+  useEffect(() => {
+    if (disabled) setOpen(false);
+  }, [disabled]);
+
   useEffect(() => {
     if (!open) return;
     itemsRef.current[0]?.focus({ preventScroll: true });
@@ -159,7 +164,7 @@ function DownloadMenu({ disabled, busy, onDownload }: { disabled: boolean; busy:
       >
         <Icon name="download" /> {busy ? t("Preparing…") : t("Download")}
       </button>
-      {open && (
+      {open && !disabled && (
         <div className="download__menu" role="menu" aria-label={t("Download format")} onKeyDown={onMenuKey}>
           {options.map((o, i) => (
             <button

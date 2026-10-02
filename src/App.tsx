@@ -265,6 +265,8 @@ export default function App() {
     try {
       await remember();
       notify({ tone: "ok", text: t("Saved to recent codes.") });
+    } catch {
+      notify({ tone: "error", text: t("Couldn't save this code — try again.") });
     } finally {
       setBusy(null);
     }

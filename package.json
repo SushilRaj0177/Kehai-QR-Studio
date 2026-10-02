@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Design scannable QR codes in the browser: URL, text, email, phone and Wi-Fi, with live scan verification. Part of the Kehai ecosystem.",
+  "description": "Design scannable QR codes in the browser: URL, text, email, phone, Wi-Fi and contact cards, with live scan verification. Part of the Kehai ecosystem.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

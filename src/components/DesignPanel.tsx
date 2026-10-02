@@ -81,6 +81,15 @@ function Slider(props: { id: string; label: string; value: number; min: number; 
   const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const touchRef = useRef<HTMLDivElement | null>(null);
+  // What's being typed in the number box. Values are applied as soon as
+  // they're in range, but out-of-range drafts ("2" on the way to "256") are
+  // kept as typed and only clamped when the box is left.
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = (raw: string) => {
+    const n = Number(raw);
+    if (raw.trim() !== "" && Number.isFinite(n)) onChange(Math.min(max, Math.max(min, Math.round(n))));
+    setDraft(null);
+  };
   // Latest props for the native listeners attached once below.
   const live = useRef({ value, min, max, step, onChange });
   live.current = { value, min, max, step, onChange };
@@ -153,10 +162,16 @@ function Slider(props: { id: string; label: string; value: number; min: number; 
             min={min}
             max={max}
             step={step}
-            value={value}
+            value={draft ?? value}
             onChange={(e) => {
-              const n = Number(e.target.value);
-              if (Number.isFinite(n)) onChange(Math.min(max, Math.max(min, Math.round(n))));
+              const raw = e.target.value;
+              const n = Number(raw);
+              setDraft(raw);
+              if (raw.trim() !== "" && Number.isFinite(n) && n >= min && n <= max) onChange(Math.round(n));
+            }}
+            onBlur={(e) => commit(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit(e.currentTarget.value);
             }}
           />
           {unit}

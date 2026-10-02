@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop; the preview stays pinned only alongside the content and design panels and stops above Recent codes, rather than sliding under them (the working panels have their own grid, `.layout__main`). On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **108 unit/component tests** (Vitest) plus **60 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **109 unit/component tests** (Vitest) plus **60 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (Chrome directly; Samsung Internet via its long-press image menu, see below) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -116,7 +116,7 @@ On phones, the browser's range sliders grab any touch: a finger that lands on on
 The **日本語 / EN** button in the top bar switches the whole interface: labels, hints, validation errors, readability warnings, the scan badge, toasts, recent-code times and screen-reader labels. The QR **content** is never translated; a code encodes exactly what you typed.
 
 - **First visit** follows the browser language (`ja-*` starts in Japanese). After that the choice is saved in `localStorage` (`kqs.lang`), and `<html lang>` is updated so screen readers and line breaking use Japanese rules.
-- **No i18n library.** `src/i18n/` holds a ~40-line translator and a dictionary keyed by the English text itself: `t("Download PNG")` returns `PNG をダウンロード` in Japanese and falls back to English for anything missing. `{name}` placeholders handle numbers and domains, and a small `rich()` helper places links or bold text in sentences whose word order differs between the two languages.
+- **No i18n library.** `src/i18n/` holds a ~40-line translator and a dictionary keyed by the English text itself: `t("Download")` returns `ダウンロード` in Japanese and falls back to English for anything missing. `{name}` placeholders handle numbers and domains, and a small `rich()` helper places links or bold text in sentences whose word order differs between the two languages.
 - **Pure logic stays pure.** `validate()` and `analyze()` take an optional `t` that defaults to English, so the unit tests and library code still work without React.
 - **Typography:** Japanese text uses the system's Japanese fonts. The bundled Noto Sans JP is only a heavy kanji subset for the watermarks. Letter-spaced uppercase labels switch to the body font, and headings break between phrases (`word-break: auto-phrase`).
 - **Tested:**
@@ -315,6 +315,7 @@ Guards (e2e): only the top bar may use a live backdrop blur; every panel holding
 - **UTF-8 that actually works.** The renderer writes one byte per character, which corrupts accents, kanji and emoji. Payloads are converted to their UTF-8 bytes first. There's an end-to-end test for `こんにちは 🌸`.
 - **Errors after interaction.** Validation messages appear once you leave a field, not while you're still typing the first character. Export stays disabled until the input is valid.
 - **Presets set looks only.** Your size and logo survive a preset change, and anything can be tweaked afterwards.
+- **Number boxes you can type into.** The Size, Margin, Angle and Logo-size boxes apply a value as soon as it's in range, but keep an out-of-range draft as typed (the "2" on the way to "256") and only clamp it when you leave the box or press Enter. Before, the first keystroke snapped to the minimum and made typing a size impossible (unit-tested).
 - **Accessibility, audited:** an automated [axe-core](https://github.com/dequelabs/axe-core) audit runs in the e2e suite against WCAG 2.1 A/AA in both themes and both languages, and on a busy screen (warnings, website logo, recent codes). The first run found secondary text below 4.5:1 contrast, so the `--text-3` token was raised in both themes. There are zero violations now.
 - **Accessibility:** native radio groups for every choice (keyboard and screen-reader friendly), labelled controls, `aria-invalid` / `aria-describedby` for errors, live regions for the scan badge and toasts, visible focus rings, and reduced-motion support.
 
@@ -334,7 +335,7 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 108 unit + component tests (Vitest, jsdom)
+npm test             # 109 unit + component tests (Vitest, jsdom)
 npm run test:e2e     # 60 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 npm run test:visual  # pixel comparison against the approved look (14 screenshots)

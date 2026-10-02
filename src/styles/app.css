@@ -30,9 +30,6 @@
   --bg-glow-2: rgba(34, 226, 245, 0.1);
   --surface: rgba(255, 255, 255, 0.035);
   --surface-strong: rgba(255, 255, 255, 0.06);
-  /* Panels: near-opaque fill matching the old frosted look, without a
-     per-frame backdrop blur (the biggest scroll cost on phones). */
-  --panel-bg: rgba(14, 16, 20, 0.94);
   --surface-solid: #0c1017;
   --border: rgba(255, 255, 255, 0.09);
   --border-strong: rgba(255, 255, 255, 0.18);
@@ -55,7 +52,6 @@
   --bg-glow-2: rgba(8, 145, 178, 0.08);
   --surface: rgba(255, 255, 255, 0.7);
   --surface-strong: #ffffff;
-  --panel-bg: rgba(252, 251, 250, 0.95);
   --surface-solid: #ffffff;
   --border: rgba(20, 16, 12, 0.1);
   --border-strong: rgba(20, 16, 12, 0.22);
@@ -456,7 +452,7 @@ html[lang="ja"] .kind-tab__label {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   /* Frosted look via <Glass> (pre-blurred background), not backdrop-filter:
-     see the .glass rules below. */
+     see the .glass rules above. */
   position: relative;
   isolation: isolate;
   --panel-r: var(--radius-lg);
@@ -1437,7 +1433,7 @@ html[lang="ja"] .stress__label {
   color: var(--text-2);
 }
 
-/* Kehai's signature pill: gradient ring + glowing arrow disc. */
+/* Pill buttons (the actions grid, logo and picker controls). */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -1452,42 +1448,6 @@ html[lang="ja"] .stress__label {
 .btn:disabled {
   cursor: not-allowed;
   opacity: 0.45;
-}
-.btn--primary {
-  position: relative;
-  justify-content: space-between;
-  padding: 6px 6px 6px 22px;
-  min-height: 52px;
-  font-family: var(--font-display);
-  font-size: 15.5px;
-  letter-spacing: 0.01em;
-  color: var(--text);
-  background:
-    linear-gradient(var(--surface-solid), var(--surface-solid)) padding-box,
-    linear-gradient(100deg, color-mix(in srgb, var(--shu) 85%, transparent), rgba(255, 255, 255, 0.18), color-mix(in srgb, var(--kehai) 75%, transparent)) border-box;
-  border: 1px solid transparent;
-  box-shadow: 0 10px 34px -12px rgba(255, 45, 85, 0.55);
-}
-.btn--primary:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 40px -12px rgba(255, 45, 85, 0.75);
-}
-.btn--primary:not(:disabled):active {
-  transform: scale(0.985);
-}
-.btn__disc {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  color: #fff;
-  background: linear-gradient(135deg, #ff5c73, #e11d48);
-  box-shadow: 0 0 18px -2px rgba(255, 45, 85, 0.8);
-  transition: transform 0.2s var(--ease);
-}
-.btn--primary:not(:disabled):hover .btn__disc {
-  transform: translateY(2px);
 }
 .btn--ghost {
   padding: 10px 12px;
@@ -1908,7 +1868,6 @@ html[lang="ja"] .stress__label {
   transform: translate(-50%, -50%) scale(0);
   animation: ripple 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
-.btn--primary .ripple,
 .segmented__item.is-active .ripple {
   background: #fff;
 }

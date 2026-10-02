@@ -67,6 +67,7 @@ function render() {
 
   const card = el("section", "viewer__card");
   if (text === null || !text.trim()) {
+    document.title = "Message · Kehai QR Studio";
     card.append(el("p", "viewer__empty", T.empty), el("p", "viewer__hint", T.emptyHint));
     root.append(card);
   } else {
@@ -83,11 +84,13 @@ function render() {
       try {
         await navigator.clipboard.writeText(text);
       } catch {
+        // Older browsers: select the text and try the legacy command. If
+        // that fails too, the text stays selected for a manual copy.
         const range = document.createRange();
         range.selectNodeContents(body);
         getSelection()?.removeAllRanges();
         getSelection()?.addRange(range);
-        document.execCommand?.("copy");
+        if (!document.execCommand?.("copy")) return;
       }
       copy.textContent = T.copied;
       setTimeout(() => (copy.textContent = T.copy), 1600);

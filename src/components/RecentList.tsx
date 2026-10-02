@@ -47,7 +47,7 @@ export function RecentList({ recent, onUse, onRemove, onClear }: Props) {
         <ul className="recent__grid" data-testid="recent-list">
           {recent.map((e) => (
             <li key={e.id} className="recent-card">
-              <button type="button" className="recent-card__use" onClick={() => onUse(e)} aria-label={t("Reuse {kind} code: {label}", { kind: kindLabel(e.kind), label: e.label })}>
+              <button type="button" className="recent-card__use" onClick={() => onUse(e)} aria-label={t("Reuse {kind} code: {label}", { kind: kindLabel(e.kind), label: e.label || t("Untitled") })}>
                 <img src={e.thumbnail} alt="" width={72} height={72} />
                 <span className="recent-card__text">
                   <span className="recent-card__kind">{kindLabel(e.kind)}</span>
@@ -55,7 +55,7 @@ export function RecentList({ recent, onUse, onRemove, onClear }: Props) {
                   <span className="recent-card__time">{timeAgo(e.createdAt, t, lang)}</span>
                 </span>
               </button>
-              <button type="button" className="icon-button" aria-label={t("Remove {label}", { label: e.label })} onClick={() => onRemove(e.id)}>
+              <button type="button" className="icon-button" aria-label={t("Remove {label}", { label: e.label || t("Untitled") })} onClick={() => onRemove(e.id)}>
                 <Icon name="trash" />
               </button>
             </li>

@@ -1,6 +1,7 @@
-/* Noto Sans JP 900 — only the subsets containing the kanji this app
-   displays (符 気 配), copied from @fontsource/noto-sans-jp (OFL-1.1).
-   The full family would add ~150 kB of @font-face rules. */
+/* Noto Sans JP 900 — only the subsets containing the watermark kanji
+   (符 気 配), copied from @fontsource/noto-sans-jp (OFL-1.1). The full
+   family would add ~150 kB of @font-face rules. The click-burst glyphs
+   use whatever Japanese font the device has where these subsets lack them. */
 @font-face {
   font-family: "Noto Sans JP";
   font-style: normal;
