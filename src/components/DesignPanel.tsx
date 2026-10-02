@@ -12,6 +12,7 @@ import {
 } from "../lib/design";
 import type { SiteLogoStatus } from "../hooks/useSiteLogo";
 import { ColorInput } from "./ColorInput";
+import { attachTouchDrag } from "../lib/touchIntent";
 import { Icon } from "./icons";
 import { rich, useI18n } from "../i18n/I18nContext";
 
@@ -78,6 +79,67 @@ function SiteLogoLine({ status, hasLogo, onRestore }: { status: SiteLogoStatus; 
 function Slider(props: { id: string; label: string; value: number; min: number; max: number; step: number; unit: string; onChange: (v: number) => void }) {
   const { id, label, value, min, max, step, unit, onChange } = props;
   const { t } = useI18n();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const touchRef = useRef<HTMLDivElement | null>(null);
+  // Latest props for the native listeners attached once below.
+  const live = useRef({ value, min, max, step, onChange });
+  live.current = { value, min, max, step, onChange };
+
+  useEffect(() => {
+    const el = touchRef.current;
+    const input = inputRef.current;
+    if (!el || !input) return;
+    // Track geometry of a native range: the thumb's centre travels between
+    // half a thumb from each end.
+    const THUMB = 16;
+    const snap = (v: number) => {
+      const { min, max, step } = live.current;
+      return Math.min(max, Math.max(min, Math.round((v - min) / step) * step + min));
+    };
+    const travel = () => Math.max(1, input.getBoundingClientRect().width - THUMB);
+    const valueAt = (clientX: number) => {
+      const r = input.getBoundingClientRect();
+      const { min, max } = live.current;
+      const f = Math.min(1, Math.max(0, (clientX - r.left - THUMB / 2) / travel()));
+      return snap(min + f * (max - min));
+    };
+    const set = (v: number) => {
+      if (v !== live.current.value) live.current.onChange(v);
+    };
+
+    // Touch: scroll-friendly (sideways drag moves it relative to where it
+    // was; a clean tap sets it; anything vertical scrolls the page).
+    let start = 0;
+    const detach = attachTouchDrag(el, {
+      mode: "horizontal",
+      onGrab: () => {
+        start = live.current.value;
+      },
+      onDrag: (_x, _y, dx) => {
+        const { min, max } = live.current;
+        set(snap(start + (dx / travel()) * (max - min)));
+      },
+      onTap: (x) => set(valueAt(x)),
+    });
+
+    // Mouse or pen on a touch-capable device: behave like the native slider.
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType === "touch" || e.button !== 0) return;
+      el.setPointerCapture(e.pointerId);
+      input.focus({ preventScroll: true });
+      set(valueAt(e.clientX));
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerType !== "touch" && el.hasPointerCapture(e.pointerId)) set(valueAt(e.clientX));
+    };
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove);
+    return () => {
+      detach();
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+    };
+  }, []);
   return (
     <div className="slider">
       <div className="slider__head">
@@ -100,7 +162,12 @@ function Slider(props: { id: string; label: string; value: number; min: number; 
           {unit}
         </span>
       </div>
-      <input id={id} type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
+      <div className="slider__track">
+        <input ref={inputRef} id={id} type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
+        {/* Touch devices only (see CSS): interprets touches so scrolling past
+            a slider never changes it. Keyboard and mouse use the input. */}
+        <div ref={touchRef} className="slider__touch" aria-hidden />
+      </div>
     </div>
   );
 }

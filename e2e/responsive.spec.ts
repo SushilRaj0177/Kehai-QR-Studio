@@ -87,3 +87,79 @@ test("the colour picker works by touch on a phone", async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+// ---------------------------------------------------------------- touch sliders
+
+/** A real finger gesture through Chromium's input pipeline (page scrolling included). */
+async function touchPath(page: import("@playwright/test").Page, points: [number, number][], holdMs = 0) {
+  const cdp = await page.context().newCDPSession(page);
+  const pt = ([x, y]: [number, number]) => [{ x: Math.round(x), y: Math.round(y) }];
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: pt(points[0]) });
+  if (holdMs) await page.waitForTimeout(holdMs);
+  for (const p of points.slice(1)) {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: pt(p) });
+    await page.waitForTimeout(16);
+  }
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await page.waitForTimeout(250);
+}
+const line = (from: [number, number], to: [number, number], steps = 12): [number, number][] =>
+  Array.from({ length: steps + 1 }, (_, i) => [from[0] + ((to[0] - from[0]) * i) / steps, from[1] + ((to[1] - from[1]) * i) / steps]);
+
+test("sliders: scrolling past one never changes it; a sideways drag or a tap does", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  const size = page.getByLabel("Size value");
+  const slider = page.locator("#size");
+  await slider.scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.scrollBy(0, 200)); // slider mid-screen
+  let box = (await slider.boundingBox())!;
+  const mid: [number, number] = [box.x + box.width / 2, box.y + box.height / 2];
+
+  // 1. Swipe up starting on the slider: the page scrolls, the size stays.
+  const before = await page.evaluate(() => window.scrollY);
+  await touchPath(page, line(mid, [mid[0] + 6, mid[1] - 260]));
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 100);
+  await expect(size).toHaveValue("320");
+
+  // 2. Sideways drag: the size changes, relative to where it was. (Let the
+  //    swipe's momentum scroll settle first: a touch during it just stops it.)
+  await expect.poll(async () => { const y0 = await page.evaluate(() => scrollY); await page.waitForTimeout(150); return (await page.evaluate(() => scrollY)) - y0; }).toBe(0);
+  await slider.scrollIntoViewIfNeeded(); // the swipe scrolled it off screen
+  await page.waitForTimeout(200);
+  box = (await slider.boundingBox())!;
+  const start: [number, number] = [box.x + box.width / 2, box.y + box.height / 2];
+  await touchPath(page, line(start, [start[0] + 80, start[1] + 4]));
+  const dragged = Number(await size.inputValue());
+  expect(dragged).toBeGreaterThan(320);
+
+  // 3. A clean tap near the left end sets a small size.
+  box = (await slider.boundingBox())!;
+  await touchPath(page, [[box.x + 12, box.y + box.height / 2]]);
+  expect(Number(await size.inputValue())).toBeLessThan(200);
+  await expectScanState(page, "good");
+});
+
+test("colour square: a swipe scrolls the page; press-and-hold grabs it", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  await page.getByTestId("fg-swatch").tap();
+  const sv = page.getByTestId("fg-sv");
+  await sv.scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.scrollBy(0, 150));
+  const hex = page.locator("#fg-hex");
+  let box = (await sv.boundingBox())!;
+  const mid: [number, number] = [box.x + box.width / 2, box.y + box.height / 2];
+
+  const before = await page.evaluate(() => window.scrollY);
+  await touchPath(page, line(mid, [mid[0] - 10, mid[1] - 200]));
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 80);
+  await expect(hex).toHaveValue("#0a0e14");
+
+  box = (await sv.boundingBox())!;
+  const p: [number, number] = [box.x + box.width * 0.8, box.y + box.height * 0.3];
+  await touchPath(page, line(p, [p[0] - 20, p[1] + 30], 6), 350);
+  await expect(hex).not.toHaveValue("#0a0e14");
+});

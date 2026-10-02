@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { clamp01, hsvToHex, syncHsv, type Hsv } from "../lib/color";
+import { attachTouchDrag } from "../lib/touchIntent";
 import { useI18n } from "../i18n/I18nContext";
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -87,7 +88,7 @@ export function ColorInput({ id, label, value, onChange }: Props) {
     swatchRef.current?.focus();
   };
 
-  /** Shared drag handling for the square and the hue bar. */
+  /** Mouse/pen drag for the square and the hue bar (touch is handled below). */
   const drag = (apply: (x: number, y: number) => void) => {
     const at = (e: PointerEvent<HTMLDivElement>) => {
       const r = e.currentTarget.getBoundingClientRect();
@@ -95,14 +96,47 @@ export function ColorInput({ id, label, value, onChange }: Props) {
     };
     return {
       onPointerDown: (e: PointerEvent<HTMLDivElement>) => {
+        if (e.pointerType === "touch") return;
         e.currentTarget.setPointerCapture(e.pointerId);
         at(e);
       },
       onPointerMove: (e: PointerEvent<HTMLDivElement>) => {
-        if (e.currentTarget.hasPointerCapture(e.pointerId)) at(e);
+        if (e.pointerType !== "touch" && e.currentTarget.hasPointerCapture(e.pointerId)) at(e);
       },
     };
   };
+
+  // Touch: scroll-friendly. A swipe across the picker scrolls the page; the
+  // hue bar takes a clearly sideways drag, the 2-D square needs a short
+  // press-and-hold first (any direction could be a drag there), and a clean
+  // tap sets the value at that point.
+  const svRef = useRef<HTMLDivElement | null>(null);
+  const hueRef = useRef<HTMLDivElement | null>(null);
+  const latest = useRef({ hsv, emit });
+  latest.current = { hsv, emit };
+  useEffect(() => {
+    const sv = svRef.current;
+    const hue = hueRef.current;
+    if (!open || !sv || !hue) return;
+    const frac = (el: HTMLElement, x: number, y: number) => {
+      const r = el.getBoundingClientRect();
+      return [clamp01((x - r.left) / r.width), clamp01((y - r.top) / r.height)] as const;
+    };
+    const setSv = (x: number, y: number) => {
+      const [fx, fy] = frac(sv, x, y);
+      latest.current.emit({ ...latest.current.hsv, s: fx, v: 1 - fy });
+    };
+    const setHue = (x: number) => {
+      const [fx] = frac(hue, x, 0);
+      latest.current.emit({ ...latest.current.hsv, h: fx * 360 });
+    };
+    const offSv = attachTouchDrag(sv, { mode: "hold", onGrab: setSv, onDrag: setSv, onTap: setSv });
+    const offHue = attachTouchDrag(hue, { mode: "horizontal", onGrab: (x) => setHue(x), onDrag: (x) => setHue(x), onTap: (x) => setHue(x) });
+    return () => {
+      offSv();
+      offHue();
+    };
+  }, [open]);
 
   const svKeys = (e: KeyboardEvent) => {
     if (e.key === "Escape") return close();
@@ -181,6 +215,7 @@ export function ColorInput({ id, label, value, onChange }: Props) {
       {open && (
         <div className="color-picker" id={panelId} role="group" aria-label={t("{label} picker", { label })} data-testid={`${id}-picker`}>
           <div
+            ref={svRef}
             className="color-picker__sv"
             style={{ backgroundColor: `hsl(${hsv.h} 100% 50%)` }}
             role="slider"
@@ -197,6 +232,7 @@ export function ColorInput({ id, label, value, onChange }: Props) {
             <span className="color-picker__thumb" style={{ left: `${hsv.s * 100}%`, top: `${(1 - hsv.v) * 100}%`, background: current }} />
           </div>
           <div
+            ref={hueRef}
             className="color-picker__hue"
             role="slider"
             tabIndex={0}

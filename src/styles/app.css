@@ -778,6 +778,24 @@ input[type="range"] {
   accent-color: var(--shu);
   cursor: pointer;
 }
+.slider__track {
+  position: relative;
+  display: grid; /* keeps the range input laid out exactly as before the wrapper */
+}
+/* Invisible touch layer over each range input, only where touch exists, so
+   swiping past a slider scrolls the page instead of changing it. */
+.slider__touch {
+  display: none;
+  position: absolute;
+  inset: -8px 0; /* a slightly taller target than the native track */
+  touch-action: pan-y;
+  cursor: pointer;
+}
+@media (any-pointer: coarse) {
+  .slider__touch {
+    display: block;
+  }
+}
 
 .grid-2 {
   display: grid;
@@ -831,7 +849,9 @@ input[type="range"] {
 .color-picker__sv,
 .color-picker__hue {
   position: relative;
-  touch-action: none; /* dragging must not scroll the page on phones */
+  /* Vertical swipes scroll the page; a sideways drag (hue) or a short
+     press-and-hold (square) takes over — see lib/touchIntent.ts. */
+  touch-action: pan-y;
   cursor: crosshair;
   outline: none;
 }
