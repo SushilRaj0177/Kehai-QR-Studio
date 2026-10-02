@@ -482,7 +482,25 @@ export default function App() {
       </footer>
 
       <div className={`toast${toast ? ` toast--${toast.tone} is-visible` : ""}`} role="status" aria-live="polite" data-testid="toast">
-        {toast?.text}
+        {toast && (
+          <>
+            <span className="toast__icon" aria-hidden>
+              <Icon name={toast.tone === "ok" ? "check" : toast.tone === "error" ? "x" : "spark"} />
+            </span>
+            <span className="toast__text">{toast.text}</span>
+            <button
+              type="button"
+              className="toast__close"
+              aria-label={t("Dismiss")}
+              onClick={() => {
+                window.clearTimeout(toastTimer.current);
+                setToast(null);
+              }}
+            >
+              <Icon name="x" />
+            </button>
+          </>
+        )}
       </div>
     </div>
     </I18nContext.Provider>

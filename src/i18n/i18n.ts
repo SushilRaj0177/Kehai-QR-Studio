@@ -1,6 +1,6 @@
 /**
  * Tiny, dependency-free i18n. The English text *is* the key: components
- * call t("Download PNG") and get the Japanese string when Japanese is on,
+ * call t("Download") and get the Japanese string when Japanese is on,
  * or the English one otherwise (and as a fallback for anything missing).
  * {name} placeholders are filled from params in both languages.
  *

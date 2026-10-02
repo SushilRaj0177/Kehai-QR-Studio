@@ -1355,11 +1355,76 @@ html[lang="ja"] .stress__label {
 }
 .actions__row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* Copy · Save */
   gap: 8px;
 }
-.actions__row--4 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.actions__row--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* Copy · Share · Save */
+}
+
+/* Download: one button, then a choice of format. */
+.download {
+  position: relative;
+  display: grid;
+}
+.download__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-solid); /* opaque: nothing ghosting through */
+  box-shadow: var(--shadow);
+  animation: download-menu-in 0.22s var(--ease);
+}
+@keyframes download-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+.download__item {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.download__item:hover,
+.download__item:focus-visible {
+  border-color: var(--shu);
+  outline: none;
+}
+.download__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+}
+.download__badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--shu) 18%, transparent);
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.download__note {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-2);
 }
 
 /* Kehai's signature pill: gradient ring + glowing arrow disc. */
@@ -1616,36 +1681,99 @@ html[lang="ja"] .stress__label {
   color: var(--text);
 }
 
+/* Notifications: a compact card, not a pill, so long messages stay
+   readable. Bottom of the screen, clear of the gesture bar; tap × to close. */
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 22px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   z-index: 50;
-  max-width: min(92vw, 440px);
-  padding: 12px 18px;
-  border-radius: 999px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: max-content;
+  max-width: min(440px, calc(100vw - 32px));
+  padding: 12px 10px 12px 12px;
+  border-radius: 14px;
   border: 1px solid var(--border-strong);
   background: var(--surface-solid);
   box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.7);
+  color: var(--text);
   font-size: 14px;
   font-weight: 500;
+  line-height: 1.45;
+  text-align: left;
   opacity: 0;
   transform: translate(-50%, 16px);
   pointer-events: none;
-  transition: all 0.3s var(--ease);
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
 }
 .toast.is-visible {
   opacity: 1;
   transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+.toast__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--text-3);
+}
+.toast__icon svg {
+  width: 13px;
+  height: 13px;
+}
+.toast__text {
+  min-width: 0;
+  padding-top: 2px;
+  overflow-wrap: anywhere;
+}
+.toast__close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin: -1px 0 0 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.toast__close:hover {
+  color: var(--text);
+  background: var(--surface-strong);
+}
+.toast__close svg {
+  width: 14px;
+  height: 14px;
 }
 .toast--ok {
-  border-color: color-mix(in srgb, var(--good) 50%, transparent);
+  border-color: color-mix(in srgb, var(--good) 45%, var(--border-strong));
+}
+.toast--ok .toast__icon {
+  background: var(--good);
+  color: #062b1d;
 }
 .toast--error {
-  border-color: color-mix(in srgb, var(--shu) 60%, transparent);
+  border-color: color-mix(in srgb, var(--shu) 55%, var(--border-strong));
+}
+.toast--error .toast__icon {
+  background: var(--shu);
 }
 .toast--info {
-  border-color: color-mix(in srgb, var(--kehai) 45%, transparent);
+  border-color: color-mix(in srgb, var(--kehai) 40%, var(--border-strong));
+}
+.toast--info .toast__icon {
+  background: var(--cyan-text);
+  color: var(--surface-solid);
 }
 
 /* ---------------------------------------------------------------- responsive */
@@ -1742,7 +1870,7 @@ html[lang="ja"] .stress__label {
 /* Everything you can press springs down a little and back with a slight
    overshoot, and a ripple spreads from where the finger or cursor landed
    (usePressRipple). */
-:is(.btn, .icon-button, .lang-toggle, .chip, .kind-tab, .preset, .segmented__item, .link-button, .dropzone, .recent-card__use, .color-input__swatch, .color-picker__swatch) {
+:is(.btn, .icon-button, .lang-toggle, .chip, .kind-tab, .preset, .segmented__item, .link-button, .dropzone, .recent-card__use, .color-input__swatch, .color-picker__swatch, .download__item) {
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -1750,12 +1878,12 @@ html[lang="ja"] .stress__label {
   user-select: none;
   touch-action: manipulation;
 }
-:is(.btn, .icon-button, .lang-toggle, .chip, .kind-tab, .preset, .segmented__item, .link-button, .dropzone, .recent-card__use, .color-input__swatch, .color-picker__swatch):not(:disabled) {
+:is(.btn, .icon-button, .lang-toggle, .chip, .kind-tab, .preset, .segmented__item, .link-button, .dropzone, .recent-card__use, .color-input__swatch, .color-picker__swatch, .download__item):not(:disabled) {
   transition-property: transform, background, background-color, border-color, color, box-shadow, opacity;
   transition-duration: 0.45s, 0.2s, 0.2s, 0.2s, 0.2s, 0.2s, 0.2s;
   transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1), var(--ease), var(--ease), var(--ease), var(--ease), var(--ease), var(--ease);
 }
-:is(.btn, .icon-button, .lang-toggle, .chip, .kind-tab, .preset, .segmented__item, .link-button, .dropzone, .recent-card__use, .color-input__swatch, .color-picker__swatch):not(:disabled):active {
+:is(.btn, .icon-button, .lang-toggle, .chip, .kind-tab, .preset, .segmented__item, .link-button, .dropzone, .recent-card__use, .color-input__swatch, .color-picker__swatch, .download__item):not(:disabled):active {
   transform: scale(0.94);
   transition-duration: 0.08s;
   transition-timing-function: ease-out;

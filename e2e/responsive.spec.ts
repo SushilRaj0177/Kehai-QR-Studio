@@ -25,7 +25,7 @@ test("works on a phone: no sideways scrolling, preview right under the form", as
   const box = await page.getByTestId("preview-stage").boundingBox();
   expect(box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
 
-  const file = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+  const file = decodePng((await downloadVia(page, "png")).buffer);
   expect(file.text).toBe("https://gdg.community.dev");
 });
 

@@ -21,6 +21,6 @@ test("works offline after one visit", async ({ page, context }) => {
   await page.reload();
   await page.getByLabel("Website URL").fill("gdg.community.dev");
   await expectScanState(page, "good");
-  const file = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+  const file = decodePng((await downloadVia(page, "png")).buffer);
   expect(file.text).toBe("https://gdg.community.dev");
 });

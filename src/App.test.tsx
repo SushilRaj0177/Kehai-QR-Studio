@@ -62,7 +62,7 @@ describe("validation", () => {
 
   it("keeps downloads disabled until the input is valid", async () => {
     const user = setup();
-    const download = screen.getByRole("button", { name: /Download PNG/ });
+    const download = screen.getByRole("button", { name: /^Download$/ });
     expect(download).toBeDisabled();
     await user.type(screen.getByLabelText("Website URL"), "example");
     expect(download).toBeDisabled();

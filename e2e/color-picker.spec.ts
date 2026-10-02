@@ -46,7 +46,7 @@ test("drag anywhere on the square and hue bar to pick any shade", async ({ page 
   // The code is really drawn in that colour.
   await page.keyboard.press("Escape");
   await expectScanState(page, "good");
-  const file = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+  const file = decodePng((await downloadVia(page, "png")).buffer);
   let count = 0;
   for (let i = 0; i < file.data.length; i += 4) {
     if (file.data[i] === 0x33 && file.data[i + 1] === 0x66 && file.data[i + 2] === 0x33) count++;
