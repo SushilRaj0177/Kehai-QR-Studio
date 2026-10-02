@@ -1736,6 +1736,50 @@ html[lang="ja"] .stress__label {
   }
 }
 
+/* ---------------------------------------------------------------- kanji burst */
+
+/* One fixed overlay for every burst (useKanjiBurst), above panels and the
+   top bar but below toasts; never intercepts clicks. */
+#kanji-bursts {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  overflow: hidden;
+  contain: strict;
+}
+.kburst {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.kburst__ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 92px;
+  height: 92px;
+  border: 2px solid var(--accent-text);
+  border-radius: 50%;
+  opacity: 0;
+}
+.kburst__glyph {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--font-jp);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--accent-text);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--accent-text) 45%, transparent);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.kburst__glyph:nth-child(3n) {
+  color: var(--cyan-text);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--cyan-text) 45%, transparent);
+}
+
 /* ---------------------------------------------------------------- theme switch */
 
 /* The new theme grows out of the toggle as a circle (View Transitions API,

@@ -415,3 +415,23 @@ test("desktop: the pinned preview stops above Recent codes instead of sliding un
   ]);
   expect(preview!.y + preview!.height).toBeLessThanOrEqual(recent!.y);
 });
+
+test("clicking scatters a kanji burst that cleans up, but not while typing or ticking", async ({ page }) => {
+  const glyphs = page.locator("#kanji-bursts .kburst__glyph");
+  // Wait until the app has mounted (its listeners attach right after).
+  await expect(page.getByTestId("scan-status")).toBeVisible();
+  await page.waitForTimeout(100);
+  // Empty space: a burst of 7 glyphs, then the overlay empties itself.
+  await page.mouse.click(30, 400);
+  await expect(glyphs).toHaveCount(7);
+  await expect(glyphs).toHaveCount(0, { timeout: 2500 });
+  // Typing in a field, ticking a checkbox and keyboard activation stay quiet.
+  await page.getByLabel("Website URL").click();
+  await page.getByLabel("Use the website's logo for links automatically").click();
+  await page.getByRole("button", { name: /Reset/ }).focus();
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(150);
+  await expect(glyphs).toHaveCount(0);
+  // The overlay never blocks clicks underneath.
+  expect(await page.locator("#kanji-bursts").evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
+});

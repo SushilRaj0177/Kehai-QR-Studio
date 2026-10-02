@@ -13,6 +13,7 @@ import { useRecent } from "./hooks/useRecent";
 import { useSiteLogo } from "./hooks/useSiteLogo";
 import { usePressRipple } from "./hooks/usePressRipple";
 import { useFrost } from "./hooks/useFrost";
+import { useKanjiBurst } from "./hooks/useKanjiBurst";
 import { DEFAULT_DESIGN, PRESETS, applyPreset, matchingPreset, type QrDesign } from "./lib/design";
 import { DEFAULT_FIELDS, KINDS, describe, encode, validate, type AllFields, type QrKind } from "./lib/qrTypes";
 import { analyze } from "./lib/readability";
@@ -39,6 +40,7 @@ export default function App() {
   const { theme, toggle } = useTheme();
   usePressRipple();
   useFrost();
+  useKanjiBurst();
   const { recent, add, remove, clear } = useRecent();
 
   // A design link (#d=…) opens straight into its state, with no flash of the defaults.
