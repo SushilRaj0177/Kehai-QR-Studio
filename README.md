@@ -370,6 +370,9 @@ What the end-to-end suite verifies, in a real browser:
   - Copy puts the exact PNG on the clipboard; it's read back and decoded.
   - When a browser rejects image copies (simulated), Copy opens the share sheet with the PNG instead.
   - The Share button appears only where file sharing is supported, and it shares a decodable PNG.
+- **Honest scan badge:** a light code on a dark background (red on black, level L, the case from a real phone) reads "Scans in modern apps only", not "Won't scan", and ZXing decodes the download.
+- **Haptics:** on the phone profile every vibration is recorded during real touch input: a tap on a preset buzzes once, a slider drag gives a grab then light ticks, scrolling past a slider is silent, and a download gives the success pattern. On desktop, mouse clicks never buzz.
+- **No black blocks on phones:** the background and glass still reach the bottom when the address bar slides away, the glass layers have no background colour, and the baked glass image is fully opaque.
 
 ---
 
