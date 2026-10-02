@@ -1173,6 +1173,38 @@ html[lang="ja"] .stress__label {
   background-size: 18px 18px;
   overflow: hidden;
 }
+/* Invisible copy of the code's PNG for the long-press image menu. Touch
+   devices only; it never changes how the preview looks. */
+.preview__longpress {
+  display: none;
+  position: absolute;
+  inset: 22px;
+  width: calc(100% - 44px);
+  height: calc(100% - 44px);
+  object-fit: contain;
+  opacity: 0;
+  -webkit-touch-callout: default;
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+@media (any-pointer: coarse) {
+  .preview__longpress {
+    display: block;
+  }
+}
+.preview__stage.is-highlighted {
+  animation: stage-highlight 1.8s var(--ease);
+}
+@keyframes stage-highlight {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  15%,
+  60% {
+    box-shadow: 0 0 0 3px var(--shu), 0 0 28px 4px color-mix(in srgb, var(--shu) 40%, transparent);
+  }
+}
 .preview__canvas {
   display: grid;
   place-items: center;

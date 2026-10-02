@@ -17,7 +17,7 @@ import { useKanjiBurst } from "./hooks/useKanjiBurst";
 import { DEFAULT_DESIGN, PRESETS, applyPreset, matchingPreset, type QrDesign } from "./lib/design";
 import { DEFAULT_FIELDS, KINDS, describe, encode, validate, type AllFields, type QrKind } from "./lib/qrTypes";
 import { analyze } from "./lib/readability";
-import { canCopyImage, canShareImage, copyImage, downloadBlob, fileBaseName, makeThumbnail, shareImage } from "./lib/exporting";
+import { canCopyImage, canShareImage, copyImage, downloadBlob, fileBaseName, isSamsungInternet, makeThumbnail, shareImage } from "./lib/exporting";
 import { newId, type RecentEntry } from "./lib/history";
 import { decodeShareLink, encodeShareLink, type SharedState } from "./lib/shareLink";
 import { KEHAI_URL, REPO_URL } from "./lib/links";
@@ -67,7 +67,8 @@ export default function App() {
   const notify = useCallback((next: Toast) => {
     window.clearTimeout(toastTimer.current);
     setToast(next);
-    toastTimer.current = window.setTimeout(() => setToast(null), 3200);
+    // Long messages stay up long enough to read.
+    toastTimer.current = window.setTimeout(() => setToast(null), Math.max(3200, (next?.text.length ?? 0) * 55));
   }, []);
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
@@ -181,17 +182,52 @@ export default function App() {
     [kind, current, t],
   );
 
+  // The exact PNG as an object URL, for the long-press image menu on touch
+  // devices (refreshed shortly after each change).
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!payload) return setImageUrl(null);
+    let url: string | null = null;
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      const blob = await getBlob("png").catch(() => null);
+      if (cancelled || !blob) return;
+      url = URL.createObjectURL(blob);
+      setImageUrl(url);
+    }, 350);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      if (url) window.setTimeout(() => URL.revokeObjectURL(url!), 1000);
+    };
+  }, [payload, design, getBlob]);
+
+  const [highlight, setHighlight] = useState(false);
+  const debug = useMemo(() => new URLSearchParams(window.location.search).has("debug"), []);
+
   const onCopy = useCallback(async () => {
+    // Samsung Internet doesn't reliably put images on the clipboard from a
+    // page (the write silently never lands). Its own long-press image menu
+    // does work, so point there instead of pretending.
+    if (isSamsungInternet()) {
+      setHighlight(true);
+      window.setTimeout(() => setHighlight(false), 1800);
+      document.querySelector('[data-testid="preview-stage"]')?.scrollIntoView({ behavior: "smooth", block: "center" });
+      notify({ tone: "info", text: t("Samsung Internet doesn't let websites copy images. Long-press the QR code to copy or save it, or use Share.") });
+      return;
+    }
     setBusy("copy");
+    const trace: string[] = [];
     // Start the clipboard write *now*, inside the click, with the image as a
     // promise — waiting for the render first loses the user-gesture
     // permission in stricter browsers (Samsung Internet, Safari).
     const image = pngOrThrow();
     try {
-      await copyImage(image);
+      await copyImage(image, trace);
       await remember(await image);
       notify({ tone: "ok", text: t("Copied the image to your clipboard.") });
-    } catch {
+    } catch (err) {
+      if (debug) trace.push(`final: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`);
       // Some mobile browsers refuse to put images on the clipboard at all:
       // fall back to the share sheet, where "Copy" or any app is one tap away.
       try {
@@ -199,18 +235,18 @@ export default function App() {
         if (shareSupported) {
           if (await share(blob)) {
             await remember(blob);
-            notify({ tone: "info", text: t("This browser can't copy images, so the share menu opened instead.") });
+            notify({ tone: "info", text: t("This browser can't copy images, so the share menu opened instead.") + (debug ? ` [${trace.join(" → ")}]` : "") });
           }
         } else {
-          notify({ tone: "error", text: t("This browser doesn't allow copying images — use Download instead.") });
+          notify({ tone: "error", text: t("This browser doesn't allow copying images — use Download instead.") + (debug ? ` [${trace.join(" → ")}]` : "") });
         }
       } catch {
-        notify({ tone: "error", text: t("Couldn't copy or share the image — use Download instead.") });
+        notify({ tone: "error", text: t("Couldn't copy or share the image — use Download instead.") + (debug ? ` [${trace.join(" → ")}]` : "") });
       }
     } finally {
       setBusy(null);
     }
-  }, [pngOrThrow, remember, notify, shareSupported, share, t]);
+  }, [pngOrThrow, remember, notify, shareSupported, share, t, debug]);
 
   const onShare = useCallback(async () => {
     setBusy("share");
@@ -387,6 +423,8 @@ export default function App() {
             onCopy={onCopy}
             onSave={onSave}
             onCopyLink={onCopyLink}
+            imageUrl={imageUrl}
+            highlight={highlight}
           />
           <KehaiCallout />
         </aside>

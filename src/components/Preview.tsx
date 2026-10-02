@@ -22,6 +22,10 @@ interface Props {
   onCopy: () => void;
   onSave: () => void;
   onCopyLink: () => void;
+  /** Object URL of the exact PNG, for the browser's long-press "copy/save image" menu (touch only). */
+  imageUrl?: string | null;
+  /** Briefly highlight the code (e.g. to show where to long-press). */
+  highlight?: boolean;
 }
 
 function ScanBadge({ scan, issues }: { scan: ScanState; issues: ReadabilityIssue[] }) {
@@ -93,14 +97,20 @@ function StressChips({ stress }: { stress: StressResult }) {
 }
 
 export function Preview(props: Props) {
-  const { containerRef, payload, placeholder, design, scan, issues, busy, canCopy, canShare, onShare, onDownload, onCopy, onSave, onCopyLink } = props;
+  const { containerRef, payload, placeholder, design, scan, issues, busy, canCopy, canShare, onShare, onDownload, onCopy, onSave, onCopyLink, imageUrl, highlight } = props;
   const { t } = useI18n();
   const disabled = !payload || busy !== null;
 
   return (
     <div className="preview">
-      <div className="preview__stage" data-testid="preview-stage">
+      <div className={`preview__stage${highlight ? " is-highlighted" : ""}`} data-testid="preview-stage">
         <div ref={containerRef} className="preview__canvas" data-testid="qr-preview" hidden={!payload} />
+        {payload && imageUrl && (
+          // Invisible copy of the exact PNG over the code: long-pressing it
+          // opens the browser's own image menu (copy / save / share), which
+          // works where the clipboard API doesn't (Samsung Internet).
+          <img className="preview__longpress" src={imageUrl} alt={t("QR code")} data-testid="longpress-image" />
+        )}
         {!payload && (
           <div className="preview__empty">
             <span className="preview__empty-glyph" aria-hidden>

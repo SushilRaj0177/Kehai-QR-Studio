@@ -49,9 +49,9 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop; the preview stays pinned only alongside the content and design panels and stops above Recent codes, rather than sliding under them (the working panels have their own grid, `.layout__main`). On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **103 unit/component tests** (Vitest) plus **56 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **108 unit/component tests** (Vitest) plus **58 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
-**Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (works in Chrome; **not yet in Samsung Internet**, see below) · ✅ custom module and corner patterns · ✅ dark / light theme.
+**Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (Chrome directly; Samsung Internet via its long-press image menu, see below) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
 **Extras:** 🔗 **design links** (see below) · 🖼️ **drag-and-drop or paste** a logo · ✨ **automatic website logos** for URL codes (see below) · 📤 **Share** button on phones (native share sheet) · 🇯🇵 **English / 日本語** language toggle (see below).
 
@@ -131,7 +131,13 @@ Browsers only allow writing to the clipboard **during the click itself**.
 - Some mobile browsers refuse image copies outright. There, **Copy falls back to the native share sheet**, where copying or sending to any app is one tap away. Browsers with neither show a clear "use Download instead" message.
 - On devices that can share files, a separate **Share** button sends the PNG straight to WhatsApp, Drive and so on. Shared codes are saved to Recent, just like downloads.
 
-> **Known limitation: Samsung Internet.** Despite the above, **Copy still doesn't work in Samsung Internet** on a real Galaxy phone: the image never reaches the clipboard the way it does in Chrome. The fixes were verified only in Chromium with simulated restrictions, and they didn't carry over to the real browser. **Download** and **Share** work there, and Copy works in Chrome. This is open, not solved.
+> **Samsung Internet.** On a real Galaxy phone the clipboard API never delivered the image, sometimes without any error, so the earlier fixes (verified only in Chromium) didn't help. Copy now handles Samsung Internet differently:
+> - **Copy doesn't touch the clipboard API there.** It highlights the code and says: *long-press the QR code to copy or save it, or use Share.*
+> - **The long-press works** because the preview carries an invisible `<img>` of the exact downloadable PNG (touch devices only, so nothing changes visually). Long-pressing it opens the browser's **own** image menu, which handles copy and save natively.
+> - **In every browser**, each clipboard attempt has a 2.5 s time limit, so a write that never answers becomes a fallback to the share sheet instead of a dead button. Where `ClipboardItem.supports()` exists, it's asked first.
+> - **Diagnostics:** open the site with `?debug` and copy failures show the exact error trail in the message, e.g. `[write(promise): TimeoutError → write(blob): NotAllowedError]`.
+>
+> The long-press route still needs confirming on a real Galaxy phone.
 
 ---
 
@@ -314,8 +320,8 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 103 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 56 end-to-end tests in Chromium (desktop + Pixel 7)
+npm test             # 108 unit + component tests (Vitest, jsdom)
+npm run test:e2e     # 58 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 npm run test:visual  # pixel comparison against the approved look (14 screenshots)
 ```

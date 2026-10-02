@@ -184,3 +184,54 @@ test("colour square: the circle can be dragged straight away, in any direction",
   const after = (await sv.locator(".color-picker__thumb").boundingBox())!;
   expect(after.y).toBeLessThan(thumb.y - 60); // the circle followed the finger
 });
+
+// ---------------------------------------------------------------- copy on phones
+
+const SAMSUNG_UA =
+  "Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/25.0 Chrome/121.0.0.0 Mobile Safari/537.36";
+
+test.describe("Samsung Internet", () => {
+  test.use({ userAgent: SAMSUNG_UA });
+
+  test("Copy points to the long-press image menu, which holds the exact PNG", async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { __writes: number }).__writes = 0;
+      navigator.clipboard.write = async () => {
+        (window as unknown as { __writes: number }).__writes++;
+      };
+    });
+    await page.goto("/");
+    await page.getByLabel("Website URL").fill("gdg.community.dev");
+    await expectScanState(page, "good");
+    await page.getByRole("button", { name: "Copy", exact: true }).click();
+    await expect(page.getByTestId("toast")).toContainText("Long-press the QR code");
+    await expect(page.getByTestId("preview-stage")).toHaveClass(/is-highlighted/);
+    // The clipboard API is never trusted here.
+    expect(await page.evaluate(() => (window as unknown as { __writes: number }).__writes)).toBe(0);
+
+    // The long-press target is the exact downloadable PNG, sitting over the code.
+    const img = page.getByTestId("longpress-image");
+    await expect(img).toBeVisible();
+    const bytes = await img.evaluate(async (el: HTMLImageElement) => Array.from(new Uint8Array(await (await fetch(el.src)).arrayBuffer())));
+    expect(decodePng(Buffer.from(bytes)).text).toBe("https://gdg.community.dev");
+    const [stage, box] = await Promise.all([page.getByTestId("preview-stage").boundingBox(), img.boundingBox()]);
+    expect(box!.width).toBeGreaterThan(stage!.width * 0.8);
+  });
+});
+
+test("a clipboard that never answers still falls back to the share menu (with ?debug details)", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __shared: number };
+    w.__shared = 0;
+    navigator.clipboard.write = () => new Promise<void>(() => {}); // hangs forever
+    Object.defineProperty(navigator, "canShare", { configurable: true, value: () => true });
+    Object.defineProperty(navigator, "share", { configurable: true, value: async () => void w.__shared++ });
+  });
+  await page.goto("/?debug");
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  await page.getByRole("button", { name: "Copy", exact: true }).click();
+  await expect(page.getByTestId("toast")).toContainText("share menu opened", { timeout: 8000 });
+  await expect(page.getByTestId("toast")).toContainText("TimeoutError");
+  expect(await page.evaluate(() => (window as unknown as { __shared: number }).__shared)).toBe(1);
+});

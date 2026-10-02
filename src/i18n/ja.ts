@@ -42,6 +42,8 @@ export const JA: Record<string, string> = {
   "Nothing to export yet.": "まだ書き出せるものがありません。",
   "QR code": "QRコード",
   "Copied the image to your clipboard.": "画像をクリップボードにコピーしました。",
+  "Samsung Internet doesn't let websites copy images. Long-press the QR code to copy or save it, or use Share.":
+    "Samsung Internet ではウェブサイトから画像をコピーできません。QR コードを長押ししてコピー・保存するか、共有を使ってください。",
   "This browser can't copy images, so the share menu opened instead.": "このブラウザは画像をコピーできないため、共有メニューを開きました。",
   "This browser doesn't allow copying images — use Download instead.": "このブラウザでは画像をコピーできません。ダウンロードをご利用ください。",
   "Couldn't copy or share the image — use Download instead.": "画像をコピーも共有もできませんでした。ダウンロードをご利用ください。",

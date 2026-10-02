@@ -27,22 +27,58 @@ export function canCopyImage(): boolean {
 }
 
 /**
+ * Samsung Internet doesn't reliably put images on the clipboard from a web
+ * page (real-device testing: the write never lands, with or without an
+ * error), so the studio routes Copy there to the browser's own long-press
+ * image menu instead (see Preview).
+ */
+export function isSamsungInternet(ua = typeof navigator !== "undefined" ? navigator.userAgent : ""): boolean {
+  return /SamsungBrowser\//i.test(ua);
+}
+
+/** Rejects with a TimeoutError if `p` hasn't settled in `ms`. */
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new DOMException(`No answer after ${ms} ms`, "TimeoutError")), ms);
+  });
+  return Promise.race([p, timeout]).finally(() => clearTimeout(timer));
+}
+
+const describe = (e: unknown) => (e instanceof Error ? `${e.name}: ${e.message}` : String(e));
+
+/**
  * Copy a PNG to the clipboard.
  *
  * Call this *synchronously* from the click handler and pass the image as a
  * Promise: browsers only allow clipboard writes during a user gesture, and
- * stricter engines (Safari, Samsung Internet) reject the write if we first
- * await the render and only then call clipboard.write(). Engines that don't
- * accept a Promise inside ClipboardItem get a retry with the resolved blob.
+ * stricter engines reject the write if we first await the render. Engines
+ * that don't accept a Promise inside ClipboardItem get a retry with the
+ * resolved blob. Each attempt has a time limit, so an engine that silently
+ * never answers turns into a failure (and the caller's fallback) instead of
+ * a dead button. `trace` collects what happened, for ?debug.
  */
-export async function copyImage(image: Blob | Promise<Blob>): Promise<void> {
+export async function copyImage(image: Blob | Promise<Blob>, trace: string[] = [], timeoutMs = 2500): Promise<void> {
   if (!canCopyImage()) throw new Error("Copying images isn't supported in this browser.");
+  const supports = (ClipboardItem as unknown as { supports?: (type: string) => boolean }).supports;
+  if (typeof supports === "function" && !supports("image/png")) {
+    trace.push("ClipboardItem.supports('image/png') = false");
+    throw new DOMException("This browser can't put PNG images on the clipboard.", "NotSupportedError");
+  }
   try {
-    await navigator.clipboard.write([new ClipboardItem({ "image/png": image })]);
+    await withTimeout(navigator.clipboard.write([new ClipboardItem({ "image/png": image })]), timeoutMs);
+    trace.push("write(promise): ok");
   } catch (e) {
+    trace.push(`write(promise): ${describe(e)}`);
     if (!(image instanceof Promise)) throw e;
     const blob = await image;
-    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    try {
+      await withTimeout(navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]), timeoutMs);
+      trace.push("write(blob): ok");
+    } catch (e2) {
+      trace.push(`write(blob): ${describe(e2)}`);
+      throw e2;
+    }
   }
 }
 
