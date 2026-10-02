@@ -21,7 +21,7 @@ async function open(page: Page, theme: "dark" | "light", width = 1440, height = 
 /** Element captures: keep the sticky bar and toasts from overlapping. */
 async function forElementShot(page: Page) {
   await page.addStyleTag({
-    content: ".topbar{position:static!important}.toast{display:none!important}.panel--preview{position:static!important}",
+    content: ".topbar{position:static!important}.toast{display:none!important}.panel.panel--preview{position:relative!important;top:auto!important}",
   });
 }
 
@@ -146,4 +146,25 @@ test("website logo detected automatically", async ({ page }) => {
   await forElementShot(page);
   await page.locator(".panel--preview").screenshot({ path: `${OUT}/site-logo.png` });
   await page.locator(".design-section", { hasText: "Logo" }).last().screenshot({ path: `${OUT}/site-logo-controls.png` });
+});
+
+// Guard: a capture that came out blank (e.g. something painted over the
+// panel) must fail loudly instead of quietly landing in the README.
+test("no screenshot is blank", async () => {
+  const { readdirSync, readFileSync } = await import("node:fs");
+  const { PNG } = await import("pngjs");
+  for (const file of readdirSync(OUT).filter((f) => f.endsWith(".png"))) {
+    const { data } = PNG.sync.read(readFileSync(`${OUT}/${file}`));
+    let sum = 0;
+    let sq = 0;
+    let n = 0;
+    for (let i = 0; i < data.length; i += 16) {
+      const l = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      sum += l;
+      sq += l * l;
+      n++;
+    }
+    const stddev = Math.sqrt(sq / n - (sum / n) ** 2);
+    if (stddev < 5) throw new Error(`${file} looks blank (luminance stddev ${stddev.toFixed(1)})`);
+  }
 });
