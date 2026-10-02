@@ -200,6 +200,7 @@ Decoding first runs with normal polarity (dark code on light), which every scann
 |---|---|
 | ✅ **Scan verified** | Decodes to exactly your content and no readability rule is triggered |
 | ⚠️ **Scans, with caveats** | Decodes correctly, but the design breaks a rule of thumb for real cameras |
+| ⚠️ **Scans in modern apps only** | Decodes only with the colours flipped (a light code on a dark background): Google Lens and most current phone cameras read it, some older scanner apps don't |
 | ❌ **Won't scan** / **Decodes to the wrong content** | The rendered image doesn't decode, or decodes to something else |
 
 ### 1b. Camera stress test
@@ -284,7 +285,7 @@ e2e/                        Playwright: behaviour, responsive layout, README scr
 **Data flow:** `fields → validate() → encode() → payload`, then `payload + design` feeds three things: the **renderer** (preview and export), **analyze()** (warnings) and **verifyScan()** (badge).
 There is one source of truth for the design, so the preview, the downloaded PNG and the SVG can't drift apart.
 
-**Bundle splitting.** The first load needs React, the renderer and the app (~91 kB gzipped). The jsQR decoder (~48 kB gzipped) is only needed for the scan badge, so it's a separate chunk fetched in parallel with the first render (`useScanCheck`). React and the renderer are also separate chunks, so a redeploy of app code doesn't re-download them. Before this, everything was one 141 kB gzipped file.
+**Bundle splitting.** The first load needs React, the renderer and the app (~103 kB gzipped). The jsQR decoder (~48 kB gzipped) is only needed for the scan badge, so it's a separate chunk fetched in parallel with the first render (`useScanCheck`). React and the renderer are also separate chunks, so a redeploy of app code doesn't re-download them. When this split was introduced, it cut the first load from 141 kB to 91 kB gzipped; features added since (Japanese, the colour picker, design links, the stress test and more) bring it to ~103 kB today, with the decoder still kept out of it.
 
 **Smooth scrolling without losing the frosted glass (measured).** Real-phone testing showed small stutters while scrolling. The cause was `backdrop-filter: blur()` on the four large panels: the background is `position: fixed`, so it moves relative to the panels, and the browser re-blurred everything behind every panel on every frame. Shrinking the blur or promoting layers didn't help enough (best case ~49 fps), and removing the effect wasn't an option, so the blur is now **baked once**:
 
