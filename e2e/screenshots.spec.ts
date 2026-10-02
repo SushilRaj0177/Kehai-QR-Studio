@@ -60,6 +60,19 @@ test("logo, gradient and the design panel", async ({ page }) => {
   await expectScanState(page, "good");
   await forElementShot(page);
   await page.locator(".panel--preview").screenshot({ path: `${OUT}/logo-gradient.png` });
+});
+
+// The design panel is taller than a normal window. Capture it in a window
+// tall enough to hold it, so the frosted glass (sized to the window) covers
+// the whole panel as it does on screen.
+test("design panel (tall window)", async ({ page }) => {
+  await open(page, "dark", 1440, 2400);
+  await page.getByLabel("Website URL").fill("kehai-engine-web.vercel.app");
+  await page.getByRole("button", { name: /Sakura/ }).click();
+  await page.getByTestId("logo-input").setInputFiles({ name: "logo.svg", mimeType: "image/svg+xml", buffer: LOGO });
+  await page.getByLabel("Gradient").check();
+  await expectScanState(page, "good");
+  await forElementShot(page);
   await page.locator(".panel--design").screenshot({ path: `${OUT}/design-panel.png` });
 });
 
@@ -104,7 +117,7 @@ test("recent codes", async ({ page }) => {
   await save();
   await pickKind(page, "Text");
   await page.getByLabel("Text", { exact: true }).fill("See you at the GDG meetup!");
-  await page.getByRole("button", { name: /Sumi Ink/ }).click();
+  await page.getByRole("button", { name: /Aizome/ }).click();
   await expectScanState(page, "good");
   await save();
   await forElementShot(page);

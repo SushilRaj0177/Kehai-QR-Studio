@@ -435,3 +435,14 @@ test("clicking scatters a kanji burst that cleans up, but not while typing or ti
   // The overlay never blocks clicks underneath.
   expect(await page.locator("#kanji-bursts").evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
 });
+
+test("every preset scans cleanly and passes all three camera stress tests", async ({ page }) => {
+  await page.getByLabel("Website URL").fill("gdg.community.dev/gdg-on-campus-srm");
+  for (const name of ["Classic", "Torii", "Kehai Cyan", "Matcha", "Sakura", "Aizome"]) {
+    await page.getByRole("button", { name: new RegExp(name) }).click();
+    await expectScanState(page, "good"); // verified, and no readability warnings
+    await expect(page.getByTestId("stress")).toHaveAttribute("data-passed", "3");
+    const { buffer } = await downloadVia(page, /Download PNG/);
+    expect(await zxingDecode(buffer)).toBe("https://gdg.community.dev/gdg-on-campus-srm");
+  }
+});
