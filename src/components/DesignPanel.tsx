@@ -13,6 +13,7 @@ import {
 import type { SiteLogoStatus } from "../hooks/useSiteLogo";
 import { ColorInput } from "./ColorInput";
 import { attachTouchDrag } from "../lib/touchIntent";
+import { haptic } from "../lib/haptics";
 import { Icon } from "./icons";
 import { rich, useI18n } from "../i18n/I18nContext";
 
@@ -126,7 +127,9 @@ function Slider(props: { id: string; label: string; value: number; min: number; 
       },
       onDrag: (_x, _y, dx) => {
         const { min, max } = live.current;
-        set(snap(start + (dx / travel()) * (max - min)));
+        const next = snap(start + (dx / travel()) * (max - min));
+        if (next !== live.current.value) haptic("tick"); // a light tick per step
+        set(next);
       },
       onTap: (x) => set(valueAt(x)),
     });

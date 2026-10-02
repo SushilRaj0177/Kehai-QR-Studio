@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop; the preview stays pinned only alongside the content and design panels and stops above Recent codes, rather than sliding under them (the working panels have their own grid, `.layout__main`). On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **111 unit/component tests** (Vitest) plus **62 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **114 unit/component tests** (Vitest) plus **64 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (Chrome directly; Samsung Internet via its long-press image menu, see below) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -72,7 +72,8 @@ The browser's built-in `<input type="color">` looks and behaves very differently
 - **Every pressable element** (buttons, tabs, chips, presets, swatches) springs down when pressed and back with a slight overshoot. A **ripple** spreads from the exact press point (`usePressRipple`: one delegated `pointerdown` listener, and the ripple span removes itself).
 - **No browser tap flash:** `-webkit-tap-highlight-color: transparent` removes the blue/grey rectangle mobile browsers draw on tapped elements. Focus rings on radio-based controls use `:has(:focus-visible)`, so they show for keyboard users but not after a tap.
 - **Kanji burst on click** (Kehai's signature touch, written from scratch for the studio): clicking anywhere scatters seven QR-themed kanji (符 碼 読 印 紋 標 点 線 色 彩 …) that fan out evenly, arc slightly under "gravity", spin and fade, with a thin ring expanding from the pointer. It's built with plain DOM and the Web Animations API (no React re-renders), animates only transform and opacity, and draws in a single fixed overlay that sits above the panels, below toasts, and never takes clicks. At most 4 bursts run at once. It stays quiet while typing, dragging sliders or the colour picker, ticking checkboxes or choosing options, and on keyboard activation (`useKanjiBurst`).
-- **Reduced motion** (OS setting) turns all of this off.
+- **Haptic feedback** (phones, `src/lib/haptics.ts`): a light **tap** when a finger presses any button, chip, tab or card; a **grab** when a touch takes hold of a slider or the colour picker; a faint **tick** per step while dragging a slider (merged when closer than 45 ms, so a fast drag never hums); and distinct **success** and **error** buzzes with the notification. Scrolling past a slider stays silent, and a mouse never triggers it. It uses the Vibration API, so it works in Chrome, Samsung Internet and Firefox on Android; Safari on iPhone doesn't offer it to websites, so there it simply does nothing. Tested with unit tests (patterns, tick merging, missing API) and phone e2e tests that record every vibration during real touch input.
+- **Reduced motion** (OS setting) turns off the animations above; haptics stay, since they aren't motion.
 
 ### Text codes that open as a page
 
@@ -339,8 +340,8 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 111 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 62 end-to-end tests in Chromium (desktop + Pixel 7)
+npm test             # 114 unit + component tests (Vitest, jsdom)
+npm run test:e2e     # 64 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 npm run test:visual  # pixel comparison against the approved look (14 screenshots)
 ```

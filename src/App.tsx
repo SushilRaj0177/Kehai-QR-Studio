@@ -12,6 +12,7 @@ import { useTheme } from "./hooks/useTheme";
 import { useRecent } from "./hooks/useRecent";
 import { useSiteLogo } from "./hooks/useSiteLogo";
 import { usePressRipple } from "./hooks/usePressRipple";
+import { haptic } from "./lib/haptics";
 import { useFrost } from "./hooks/useFrost";
 import { useKanjiBurst } from "./hooks/useKanjiBurst";
 import { DEFAULT_DESIGN, PRESETS, applyPreset, matchingPreset, type QrDesign } from "./lib/design";
@@ -67,6 +68,9 @@ export default function App() {
   const notify = useCallback((next: Toast) => {
     window.clearTimeout(toastTimer.current);
     setToast(next);
+    // Feel it too: success and failure have distinct buzzes (phones only).
+    if (next?.tone === "ok") haptic("success");
+    else if (next?.tone === "error") haptic("error");
     // Long messages stay up long enough to read.
     toastTimer.current = window.setTimeout(() => setToast(null), Math.max(3200, (next?.text.length ?? 0) * 55));
   }, []);

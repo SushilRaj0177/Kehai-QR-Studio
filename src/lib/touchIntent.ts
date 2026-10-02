@@ -15,6 +15,8 @@
  * have `touch-action: pan-y`).
  */
 
+import { haptic } from "./haptics";
+
 export const SLOP_PX = 8; // movement before we decide what the gesture is
 export const HOLD_MS = 220; // press-and-hold to grab a 2-D control
 const TAP_MS = 350;
@@ -66,6 +68,7 @@ export function attachTouchDrag(el: HTMLElement, h: TouchDragHandlers): () => vo
     state = "pending";
     if (h.grabOnStart?.(x0, y0)) {
       state = "dragging";
+      haptic("grab");
       h.onGrab?.(x0, y0);
       return;
     }
@@ -73,7 +76,7 @@ export function attachTouchDrag(el: HTMLElement, h: TouchDragHandlers): () => vo
       timer = window.setTimeout(() => {
         if (state !== "pending") return;
         state = "dragging";
-        navigator.vibrate?.(8);
+        haptic("grab");
         h.onGrab?.(x0, y0);
       }, HOLD_MS);
     }
@@ -90,6 +93,7 @@ export function attachTouchDrag(el: HTMLElement, h: TouchDragHandlers): () => vo
       if ((h.mode === "horizontal" || h.sideways) && Math.abs(dx) > Math.abs(dy) * 1.2) {
         window.clearTimeout(timer);
         state = "dragging";
+        haptic("grab");
         h.onGrab?.(x0, y0);
       } else {
         // Moved before claiming the control: it's a scroll. Hands off.

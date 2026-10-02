@@ -492,3 +492,16 @@ test("a light code on a dark background is reported honestly: scans in modern ap
   const { buffer } = await downloadVia(page, "png");
   expect(await zxingDecode(buffer)).toBe("https://kehai-engine-web.vercel.app");
 });
+
+test("haptics never fire for a mouse", async ({ page }) => {
+  await page.evaluate(() => {
+    const w = window as unknown as { __buzz: number };
+    w.__buzz = 0;
+    Object.defineProperty(navigator, "vibrate", { configurable: true, value: () => (w.__buzz++, true) });
+  });
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  await page.getByRole("button", { name: /Sakura/ }).click();
+  await page.getByTestId("theme-toggle").click();
+  expect(await page.evaluate(() => (window as unknown as { __buzz: number }).__buzz)).toBe(0);
+});

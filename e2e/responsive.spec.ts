@@ -292,3 +292,51 @@ test("glass tiles that render late are see-through, never a black block", async 
   });
   expect(minAlpha).toBe(255);
 });
+
+// ---------------------------------------------------------------- haptics
+
+/** Record every vibration the page requests (Pixel 7 profile: real touch). */
+async function recordVibrations(page: import("@playwright/test").Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __buzz: unknown[] };
+    w.__buzz = [];
+    Object.defineProperty(navigator, "vibrate", { configurable: true, value: (p: unknown) => (w.__buzz.push(p), true) });
+  });
+  return () => page.evaluate(() => (window as unknown as { __buzz: unknown[] }).__buzz.splice(0));
+}
+
+test("haptics: a tap on a button, a grab and steps on a slider, a buzz for success", async ({ page }) => {
+  const buzzes = await recordVibrations(page);
+  await page.goto("/");
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  await buzzes(); // ignore anything before this point
+
+  // Tapping a preset: one light tap.
+  await page.getByRole("button", { name: /Sakura/ }).tap();
+  expect(await buzzes()).toEqual([8]);
+
+  // Dragging the Size slider sideways: a grab, then light ticks as it steps.
+  const slider = page.locator("#size");
+  await slider.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(200);
+  const box = (await slider.boundingBox())!;
+  const start: [number, number] = [box.x + box.width / 2, box.y + box.height / 2];
+  await touchPath(page, line(start, [start[0] + 90, start[1] + 3], 14));
+  const drag = await buzzes();
+  expect(drag[0]).toBe(12);
+  expect(drag.slice(1).length).toBeGreaterThan(0);
+  expect(drag.slice(1).every((b) => b === 4)).toBe(true);
+
+  // Scrolling past a slider never buzzes.
+  const box2 = (await slider.boundingBox())!;
+  const mid: [number, number] = [box2.x + box2.width / 2, box2.y + box2.height / 2];
+  await touchPath(page, line(mid, [mid[0] + 4, mid[1] - 220]));
+  expect(await buzzes()).toEqual([]);
+
+  // A successful download: the tap on the menu item, then the success pattern.
+  await page.getByTestId("download").tap();
+  await page.getByTestId("download-png").tap();
+  await expect(page.getByTestId("toast")).toContainText("Downloaded PNG");
+  expect(await buzzes()).toEqual([8, 8, [10, 60, 18]]);
+});
