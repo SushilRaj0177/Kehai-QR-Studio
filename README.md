@@ -51,7 +51,7 @@ Every point from the task brief, and where it's handled.
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop; the preview stays pinned only alongside the content and design panels and stops above Recent codes, rather than sliding under them (the working panels have their own grid, `.layout__main`). On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
 | 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **95 unit/component tests** (Vitest) plus **52 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
-**Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (with a share-sheet fallback on phones) · ✅ custom module and corner patterns · ✅ dark / light theme.
+**Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (works in Chrome; **not yet in Samsung Internet**, see below) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
 **Extras:** 🔗 **design links** (see below) · 🖼️ **drag-and-drop or paste** a logo · ✨ **automatic website logos** for URL codes (see below) · 📤 **Share** button on phones (native share sheet) · 🇯🇵 **English / 日本語** language toggle (see below).
 
@@ -117,6 +117,8 @@ Browsers only allow writing to the clipboard **during the click itself**.
 - Engines that can't take a promise get a retry with the finished image.
 - Some mobile browsers refuse image copies outright. There, **Copy falls back to the native share sheet**, where copying or sending to any app is one tap away. Browsers with neither show a clear "use Download instead" message.
 - On devices that can share files, a separate **Share** button sends the PNG straight to WhatsApp, Drive and so on. Shared codes are saved to Recent, just like downloads.
+
+> **Known limitation: Samsung Internet.** Despite the above, **Copy still doesn't work in Samsung Internet** on a real Galaxy phone: the image never reaches the clipboard the way it does in Chrome. The fixes were verified only in Chromium with simulated restrictions, and they didn't carry over to the real browser. **Download** and **Share** work there, and Copy works in Chrome. This is open, not solved.
 
 ---
 
