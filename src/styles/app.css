@@ -148,7 +148,12 @@ code {
 
 .backdrop {
   position: fixed;
-  inset: 0;
+  /* As tall as the largest viewport (address bar hidden). Sized to the
+     visible viewport, a phone's address bar sliding away mid-scroll
+     uncovered a strip at the bottom until the browser caught up. */
+  inset: 0 0 auto 0;
+  height: 100vh;
+  height: 100lvh;
   z-index: -1;
   pointer-events: none;
   /* Own compositor layer: the fixed background is never repainted while scrolling. */
@@ -192,31 +197,28 @@ code {
 }
 .backdrop--frost {
   z-index: -1;
-  /* As tall as the largest viewport (address bar hidden), with the baked
-     image stretched to fill it: when a phone's address bar slides away
-     mid-scroll the glass never runs out (that left a dark block at the
-     bottom of the screen). The image is heavily blurred, so the stretch is
-     invisible, and it tracks the real backdrop, which stretches too. */
-  inset: 0 0 auto 0;
-  height: 100vh;
-  height: 100lvh;
+  /* Same box as the backdrop (largest viewport), with the baked image
+     stretched to fill it, so the two always line up. The image is heavily
+     blurred, so the stretch is invisible. */
   /* No own layer here: Chromium doesn't apply an ancestor's clip-path to a
      promoted fixed layer, which would let it cover the page. */
   transform: none;
   will-change: auto;
   contain: none;
-  /* Opaque, like a real backdrop blur: it replaces what's behind. Until the
-     baked image is ready, the plain gradients stand in (nearly identical). */
-  background:
-    radial-gradient(900px 520px at 12% -10%, var(--bg-glow-1), transparent 60%),
-    radial-gradient(800px 600px at 100% 110%, var(--bg-glow-2), transparent 60%),
-    var(--bg);
+  /* The baked image is fully opaque, so it replaces what's behind like a
+     real backdrop blur. Deliberately NO background colour: Chrome paints
+     any tile of a layer it hasn't rasterised yet in that layer's background
+     colour, and during a fast fling on a phone these tiles lag behind, so
+     a near-black colour here showed up as black blocks in the panels. With
+     no colour, a late tile is see-through to the (near-identical) sharp
+     backdrop instead. Before the image is baked, the same applies. */
+  background: none;
 }
 [data-theme="dark"] .backdrop--frost {
-  background: var(--frost-dark, none) center / 100% 100% no-repeat, var(--bg);
+  background: var(--frost-dark, none) center / 100% 100% no-repeat;
 }
 [data-theme="light"] .backdrop--frost {
-  background: var(--frost-light, none) center / 100% 100% no-repeat, var(--bg);
+  background: var(--frost-light, none) center / 100% 100% no-repeat;
 }
 
 /* ---------------------------------------------------------------- topbar */

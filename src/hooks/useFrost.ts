@@ -35,11 +35,14 @@ function render(theme: "dark" | "light", w: number, h: number): string | null {
   canvas.height = Math.max(1, Math.round(h * SCALE));
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
+  // Solid ground first, unblurred and in raw canvas pixels (the scaled size
+  // rounds up, so a scaled fill can leave the last row half covered): the
+  // image must be fully opaque to its edges, because the layer showing it
+  // has no background colour (see .backdrop--frost in the CSS).
+  ctx.fillStyle = vars.bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.scale(SCALE, SCALE);
   if ("filter" in ctx) ctx.filter = `blur(${BLUR_PX}px)`;
-
-  ctx.fillStyle = vars.bg;
-  ctx.fillRect(-50, -50, w + 100, h + 100);
 
   // radial-gradient(RX RY at X Y, colour, transparent 60%), as in .backdrop.
   const glow = (cx: number, cy: number, rx: number, ry: number, colour: string) => {

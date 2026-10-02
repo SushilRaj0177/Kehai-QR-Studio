@@ -236,7 +236,7 @@ test("a clipboard that never answers still falls back to the share menu (with ?d
   expect(await page.evaluate(() => (window as unknown as { __shared: number }).__shared)).toBe(1);
 });
 
-test("frosted glass still fills the screen when the address bar slides away", async ({ page }) => {
+test("background and frosted glass still fill the screen when the address bar slides away", async ({ page }) => {
   await page.setViewportSize({ width: 412, height: 760 }); // address bar showing
   await page.goto("/");
   await page.getByLabel("Website URL").fill("gdg.community.dev");
@@ -255,4 +255,40 @@ test("frosted glass still fills the screen when the address bar slides away", as
     expect(f.bottom).toBeGreaterThanOrEqual(vh); // the layer reaches the bottom
     expect(f.size.startsWith("100% 100%")).toBe(true); // and its image fills it (no dark block)
   }
+  // The sharp background behind everything reaches the bottom too.
+  const backdropBottom = await page.locator(".app > .backdrop").evaluate((el) => el.getBoundingClientRect().bottom);
+  expect(backdropBottom).toBeGreaterThanOrEqual(vh);
+});
+
+test("glass tiles that render late are see-through, never a black block", async ({ page }) => {
+  // Chrome paints a not-yet-rasterised tile in its layer's background
+  // colour. During a fast fling on a phone the frosted layers' tiles can
+  // lag, so those layers must have no background colour (the baked image
+  // itself is opaque).
+  await page.goto("/");
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--frost-dark").startsWith('url("data:image/png')))
+    .toBe(true);
+  const colours = await page.evaluate(() => Array.from(document.querySelectorAll(".backdrop--frost"), (f) => getComputedStyle(f).backgroundColor));
+  expect(colours.length).toBe(4);
+  for (const c of colours) expect(c).toBe("rgba(0, 0, 0, 0)");
+  // ...and the baked image really is opaque everywhere, edges included.
+  const minAlpha = await page.evaluate(async () => {
+    const url = getComputedStyle(document.documentElement).getPropertyValue("--frost-dark").trim().slice(5, -2);
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const c = document.createElement("canvas");
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const ctx = c.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+    const d = ctx.getImageData(0, 0, c.width, c.height).data;
+    let min = 255;
+    for (let i = 3; i < d.length; i += 4) min = Math.min(min, d[i]);
+    return min;
+  });
+  expect(minAlpha).toBe(255);
 });
