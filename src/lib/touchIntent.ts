@@ -6,7 +6,10 @@
  * intent is clear:
  *  - "horizontal": the first movement is clearly sideways (1-D sliders);
  *  - "hold": the finger rests still for a moment first (the 2-D colour
- *    square, where any direction could be a drag);
+ *    square, where any direction could be a drag), or, with `sideways`,
+ *    also a clearly sideways first movement;
+ *  - `grabOnStart`: the touch began on the control's handle (its thumb),
+ *    which is unmistakable intent, so it's grabbed immediately;
  *  - or it's a clean tap (no movement, short), which sets the value there.
  * Anything else is left to the browser as a scroll (the element should
  * have `touch-action: pan-y`).
@@ -18,6 +21,10 @@ const TAP_MS = 350;
 
 export interface TouchDragHandlers {
   mode: "horizontal" | "hold";
+  /** "hold" mode: also take a clearly sideways first movement as a grab. */
+  sideways?: boolean;
+  /** Return true when (x, y) is on the handle: grab at once, any direction. */
+  grabOnStart?(x: number, y: number): boolean;
   /** The touch claimed the control (drag begins). Start values are at (x, y). */
   onGrab?(x: number, y: number): void;
   /** Dragging: current point and the offset from where the finger went down. */
@@ -57,6 +64,11 @@ export function attachTouchDrag(el: HTMLElement, h: TouchDragHandlers): () => vo
     y0 = t.clientY;
     t0 = performance.now();
     state = "pending";
+    if (h.grabOnStart?.(x0, y0)) {
+      state = "dragging";
+      h.onGrab?.(x0, y0);
+      return;
+    }
     if (h.mode === "hold") {
       timer = window.setTimeout(() => {
         if (state !== "pending") return;
@@ -75,7 +87,8 @@ export function attachTouchDrag(el: HTMLElement, h: TouchDragHandlers): () => vo
     if (state === "pending") {
       const moved = Math.hypot(dx, dy) >= SLOP_PX;
       if (!moved) return;
-      if (h.mode === "horizontal" && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      if ((h.mode === "horizontal" || h.sideways) && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        window.clearTimeout(timer);
         state = "dragging";
         h.onGrab?.(x0, y0);
       } else {

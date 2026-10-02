@@ -163,3 +163,24 @@ test("colour square: a swipe scrolls the page; press-and-hold grabs it", async (
   await touchPath(page, line(p, [p[0] - 20, p[1] + 30], 6), 350);
   await expect(hex).not.toHaveValue("#0a0e14");
 });
+
+test("colour square: the circle can be dragged straight away, in any direction", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  await page.getByTestId("fg-swatch").tap();
+  const sv = page.getByTestId("fg-sv");
+  await sv.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  const hex = page.locator("#fg-hex");
+  const thumb = (await sv.locator(".color-picker__thumb").boundingBox())!;
+  const start: [number, number] = [thumb.x + thumb.width / 2, thumb.y + thumb.height / 2];
+  const scroll0 = await page.evaluate(() => scrollY);
+
+  // Straight up from the circle, no hold: brighter, and the page doesn't scroll.
+  await touchPath(page, line(start, [start[0], start[1] - 90], 8));
+  await expect(hex).not.toHaveValue("#0a0e14");
+  expect(await page.evaluate(() => scrollY)).toBe(scroll0);
+  const after = (await sv.locator(".color-picker__thumb").boundingBox())!;
+  expect(after.y).toBeLessThan(thumb.y - 60); // the circle followed the finger
+});

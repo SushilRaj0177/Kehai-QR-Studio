@@ -106,10 +106,11 @@ export function ColorInput({ id, label, value, onChange }: Props) {
     };
   };
 
-  // Touch: scroll-friendly. A swipe across the picker scrolls the page; the
-  // hue bar takes a clearly sideways drag, the 2-D square needs a short
-  // press-and-hold first (any direction could be a drag there), and a clean
-  // tap sets the value at that point.
+  // Touch: scroll-friendly. A swipe across the picker scrolls the page.
+  // Touching a thumb (the circle) grabs it at once and it follows the finger
+  // in any direction; elsewhere a clearly sideways drag grabs too (and the
+  // square also takes a short press-and-hold), and a clean tap sets the
+  // value at that point.
   const svRef = useRef<HTMLDivElement | null>(null);
   const hueRef = useRef<HTMLDivElement | null>(null);
   const latest = useRef({ hsv, emit });
@@ -130,8 +131,52 @@ export function ColorInput({ id, label, value, onChange }: Props) {
       const [fx] = frac(hue, x, 0);
       latest.current.emit({ ...latest.current.hsv, h: fx * 360 });
     };
-    const offSv = attachTouchDrag(sv, { mode: "hold", onGrab: setSv, onDrag: setSv, onTap: setSv });
-    const offHue = attachTouchDrag(hue, { mode: "horizontal", onGrab: (x) => setHue(x), onDrag: (x) => setHue(x), onTap: (x) => setHue(x) });
+    // A fingertip covers the 20 px thumb: accept touches within this radius.
+    const HIT = 32;
+    const svThumb = () => {
+      const r = sv.getBoundingClientRect();
+      const { s, v } = latest.current.hsv;
+      return { x: r.left + s * r.width, y: r.top + (1 - v) * r.height };
+    };
+    const hueThumb = () => {
+      const r = hue.getBoundingClientRect();
+      return { x: r.left + (latest.current.hsv.h / 360) * r.width, y: r.top + r.height / 2 };
+    };
+    // When grabbed by its thumb, the thumb keeps its offset from the finger
+    // instead of jumping its centre under the fingertip.
+    let off = { x: 0, y: 0 };
+    const offSv = attachTouchDrag(sv, {
+      mode: "hold",
+      sideways: true,
+      grabOnStart: (x, y) => {
+        const t = svThumb();
+        const onThumb = Math.hypot(x - t.x, y - t.y) <= HIT;
+        off = onThumb ? { x: t.x - x, y: t.y - y } : { x: 0, y: 0 };
+        return onThumb;
+      },
+      onGrab: (x, y) => setSv(x + off.x, y + off.y),
+      onDrag: (x, y) => setSv(x + off.x, y + off.y),
+      onTap: (x, y) => {
+        off = { x: 0, y: 0 };
+        setSv(x, y);
+      },
+    });
+    let hueOff = 0;
+    const offHue = attachTouchDrag(hue, {
+      mode: "horizontal",
+      grabOnStart: (x, y) => {
+        const t = hueThumb();
+        const onThumb = Math.hypot(x - t.x, y - t.y) <= HIT;
+        hueOff = onThumb ? t.x - x : 0;
+        return onThumb;
+      },
+      onGrab: (x) => setHue(x + hueOff),
+      onDrag: (x) => setHue(x + hueOff),
+      onTap: (x) => {
+        hueOff = 0;
+        setHue(x);
+      },
+    });
     return () => {
       offSv();
       offHue();

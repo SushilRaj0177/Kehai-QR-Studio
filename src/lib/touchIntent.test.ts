@@ -85,6 +85,32 @@ describe("touch intent", () => {
     expect(h.onDrag).toHaveBeenLastCalledWith(100, 140, 0, 40);
   });
 
+  it("touching the handle grabs at once and drags in any direction, no hold needed", () => {
+    const el = document.createElement("div");
+    const h = { mode: "hold" as const, grabOnStart: vi.fn(() => true), onGrab: vi.fn(), onDrag: vi.fn() };
+    attachTouchDrag(el, h);
+    fire(el, "touchstart", 100, 100);
+    expect(h.onGrab).toHaveBeenCalledWith(100, 100);
+    const e = fire(el, "touchmove", 100, 150); // straight down: still a drag
+    expect(e.defaultPrevented).toBe(true);
+    expect(h.onDrag).toHaveBeenLastCalledWith(100, 150, 0, 50);
+  });
+
+  it("2-D control with sideways: a sideways drag grabs immediately, a vertical swipe still scrolls", () => {
+    const el = document.createElement("div");
+    const h = { mode: "hold" as const, sideways: true, onGrab: vi.fn(), onDrag: vi.fn() };
+    attachTouchDrag(el, h);
+    fire(el, "touchstart", 100, 100);
+    fire(el, "touchmove", 100, 130);
+    fire(el, "touchend", 100, 130);
+    expect(h.onGrab).not.toHaveBeenCalled();
+    fire(el, "touchstart", 100, 100);
+    fire(el, "touchmove", 115, 102);
+    expect(h.onGrab).toHaveBeenCalled();
+    fire(el, "touchmove", 115, 160); // once grabbed, any direction
+    expect(h.onDrag).toHaveBeenLastCalledWith(115, 160, 15, 60);
+  });
+
   it("a second finger (pinch-zoom) never counts as a drag", () => {
     const { el, h } = setup("horizontal");
     fire(el, "touchstart", 100, 100);

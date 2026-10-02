@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop; the preview stays pinned only alongside the content and design panels and stops above Recent codes, rather than sliding under them (the working panels have their own grid, `.layout__main`). On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **101 unit/component tests** (Vitest) plus **54 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **103 unit/component tests** (Vitest) plus **56 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (works in Chrome; **not yet in Samsung Internet**, see below) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -96,7 +96,8 @@ On phones, the browser's range sliders grab any touch: a finger that lands on on
 - **Swiping up or down over a slider scrolls the page**; the value doesn't change (the control uses `touch-action: pan-y`).
 - **A clearly sideways drag** adjusts the value, *relative* to where it was, so it never jumps to the finger.
 - **A clean tap** (short, no movement) sets the value at that point.
-- **The 2-D colour square** can't tell a scroll from a drag by direction, so it needs a **short press-and-hold** (220 ms, with a tiny vibration where supported) before it follows the finger. A quick swipe across it just scrolls.
+- **Touching a slider's circle (thumb) grabs it immediately**, and in the colour picker it then follows the finger in any direction, keeping its offset rather than jumping under the fingertip. The handle is unmistakable intent.
+- **Elsewhere on the 2-D colour square**, a sideways drag or a **short press-and-hold** (220 ms, with a tiny vibration where supported) grabs it; a swipe up or down scrolls the page.
 - **Pinch-zoom** (two fingers) never counts as a drag.
 - On touch devices only, an invisible layer over each native range input applies these rules. **Mouse and keyboard use the native slider unchanged**, so accessibility and desktop behaviour are untouched, and the visual-regression check confirms the sliders look identical.
 - **Tested:** 6 unit tests for the gesture rules, plus phone e2e tests that send *real* touch input through Chromium (a swipe starting on the Size slider scrolls the page and leaves the size at 320; a sideways drag and a tap change it; the colour square scrolls on a swipe and is grabbed on press-and-hold).
@@ -313,8 +314,8 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 101 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 54 end-to-end tests in Chromium (desktop + Pixel 7)
+npm test             # 103 unit + component tests (Vitest, jsdom)
+npm run test:e2e     # 56 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 npm run test:visual  # pixel comparison against the approved look (14 screenshots)
 ```
