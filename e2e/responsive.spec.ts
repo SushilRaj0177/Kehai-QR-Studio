@@ -235,3 +235,24 @@ test("a clipboard that never answers still falls back to the share menu (with ?d
   await expect(page.getByTestId("toast")).toContainText("TimeoutError");
   expect(await page.evaluate(() => (window as unknown as { __shared: number }).__shared)).toBe(1);
 });
+
+test("frosted glass still fills the screen when the address bar slides away", async ({ page }) => {
+  await page.setViewportSize({ width: 412, height: 760 }); // address bar showing
+  await page.goto("/");
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  await page.evaluate(() => window.scrollTo(0, 1500));
+  await page.setViewportSize({ width: 412, height: 915 }); // bar hidden: taller screen
+  await page.waitForTimeout(300);
+  const frost = await page.evaluate(() =>
+    Array.from(document.querySelectorAll<HTMLElement>(".backdrop--frost")).map((f) => ({
+      bottom: f.getBoundingClientRect().bottom,
+      size: getComputedStyle(f).backgroundSize,
+    })),
+  );
+  const vh = await page.evaluate(() => innerHeight);
+  for (const f of frost) {
+    expect(f.bottom).toBeGreaterThanOrEqual(vh); // the layer reaches the bottom
+    expect(f.size.startsWith("100% 100%")).toBe(true); // and its image fills it (no dark block)
+  }
+});

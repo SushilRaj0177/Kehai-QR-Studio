@@ -196,6 +196,14 @@ code {
 }
 .backdrop--frost {
   z-index: -1;
+  /* As tall as the largest viewport (address bar hidden), with the baked
+     image stretched to fill it: when a phone's address bar slides away
+     mid-scroll the glass never runs out (that left a dark block at the
+     bottom of the screen). The image is heavily blurred, so the stretch is
+     invisible, and it tracks the real backdrop, which stretches too. */
+  inset: 0 0 auto 0;
+  height: 100vh;
+  height: 100lvh;
   /* No own layer here: Chromium doesn't apply an ancestor's clip-path to a
      promoted fixed layer, which would let it cover the page. */
   transform: none;
@@ -209,10 +217,10 @@ code {
     var(--bg);
 }
 [data-theme="dark"] .backdrop--frost {
-  background: var(--frost-dark, none) top left / 100vw auto no-repeat, var(--bg);
+  background: var(--frost-dark, none) center / 100% 100% no-repeat, var(--bg);
 }
 [data-theme="light"] .backdrop--frost {
-  background: var(--frost-light, none) top left / 100vw auto no-repeat, var(--bg);
+  background: var(--frost-light, none) center / 100% 100% no-repeat, var(--bg);
 }
 
 /* ---------------------------------------------------------------- topbar */

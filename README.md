@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop; the preview stays pinned only alongside the content and design panels and stops above Recent codes, rather than sliding under them (the working panels have their own grid, `.layout__main`). On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **108 unit/component tests** (Vitest) plus **59 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **108 unit/component tests** (Vitest) plus **60 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (Chrome directly; Samsung Internet via its long-press image menu, see below) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -289,6 +289,7 @@ There is one source of truth for the design, so the preview, the downloaded PNG 
 **Smooth scrolling without losing the frosted glass (measured).** Real-phone testing showed small stutters while scrolling. The cause was `backdrop-filter: blur()` on the four large panels: the background is `position: fixed`, so it moves relative to the panels, and the browser re-blurred everything behind every panel on every frame. Shrinking the blur or promoting layers didn't help enough (best case ~49 fps), and removing the effect wasn't an option, so the blur is now **baked once**:
 
 - `useFrost` draws the page background (both glows and the big 符) into a small canvas, blurred, for **both themes**, at load. It redraws only when the viewport *width* changes, never during scrolling (mobile URL bars change the height mid-scroll).
+- The glass layer is as tall as the largest viewport (`100lvh`), and the baked image is stretched to fill it (`100% 100%`). On phones the address bar slides away mid-scroll and the screen gets taller; before this, the glass ran out and left a dark block at the bottom of the screen. The blur makes the stretch invisible, and it tracks the real backdrop, which stretches with the viewport too.
 - Each panel contains a `<Glass>`: a `position: fixed` layer showing that image, aligned with the real background, clipped to the panel by `clip-path: inset(0 round r)`. While scrolling, the compositor only moves a clip over a texture, with no blur work per frame.
 - The result is visually identical to the live blur (checked by side-by-side screenshots in both themes). The small sticky top bar keeps a real blur because it's cheap. The fixed background sits on its own compositor layer.
 
@@ -334,7 +335,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 108 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 59 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 60 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 npm run test:visual  # pixel comparison against the approved look (14 screenshots)
 ```
