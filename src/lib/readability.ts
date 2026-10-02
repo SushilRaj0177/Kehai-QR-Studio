@@ -127,7 +127,7 @@ export function analyze(data: string, design: QrDesign, t: Translate = en): Read
       id: "inverted",
       severity: "warn",
       title: t("Inverted colours"),
-      detail: t("A light code on a dark background can't be read by many scanner apps and older phones. Use a darker code colour than the background."),
+      detail: t("A light code on a dark background only scans in apps that also try flipped colours (Google Lens and most current phone cameras do; some older scanner apps don't). A darker code than the background works everywhere."),
     });
   }
 

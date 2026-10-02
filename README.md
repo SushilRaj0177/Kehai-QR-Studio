@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop; the preview stays pinned only alongside the content and design panels and stops above Recent codes, rather than sliding under them (the working panels have their own grid, `.layout__main`). On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **109 unit/component tests** (Vitest) plus **61 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **111 unit/component tests** (Vitest) plus **62 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (Chrome directly; Samsung Internet via its long-press image menu, see below) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -194,7 +194,7 @@ About 250 ms after any change, the Studio does three things (`useScanCheck`, `sr
 2. Decodes it with [jsQR](https://github.com/cozmo/jsQR).
 3. Compares the decoded bytes with the intended payload.
 
-Decoding runs with inversion **off**, because most camera apps don't retry with inverted colours, so an inverted code shouldn't get a pass either.
+Decoding first runs with normal polarity (dark code on light), which every scanner reads. If that fails, it tries again with the colours flipped. A code that only decodes flipped (a light code on a dark background) is reported as **"Scans in modern apps only"**, a caveat rather than a failure: Google Lens and most current phone cameras retry with flipped colours, but some older scanner apps don't. Earlier versions skipped the flipped pass and called such codes "Won't scan", until a real-phone test showed Google Lens reading a red-on-black code the badge had condemned. (jsQR's own `onlyInvert` mode crashes, so the studio flips the pixels itself; unit-tested with a real light-on-dark code.)
 
 | Badge | Meaning |
 |---|---|
@@ -224,7 +224,7 @@ So `src/lib/readability.ts` also applies static rules, each with a plain-English
 | Check | Rule |
 |---|---|
 | Contrast | WCAG contrast ratio between code and background: < 2:1 is an error, < 4:1 a warning. With a gradient, both ends are checked and the weakest one decides. |
-| Inverted colours | A code lighter than its background is a warning, because many scanners only read dark-on-light. |
+| Inverted colours | A code lighter than its background is a warning: it only scans in apps that also try flipped colours (Google Lens and most current phone cameras do; some older scanner apps don't). |
 | Quiet zone | The margin is measured in modules as actually rendered: < 1 is an error, < 2 a warning. |
 | Module size | Pixels per module: < 2 px is an error, < 3 px a warning. |
 | Logo vs error correction | Logo area is compared with what the level can recover (L 7%, M 15%, Q 25%, H 30%). Adding a logo automatically raises the level to **H**. |
@@ -338,8 +338,8 @@ Requires Node 18+.
 ### Testing
 
 ```bash
-npm test             # 109 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 61 end-to-end tests in Chromium (desktop + Pixel 7)
+npm test             # 111 unit + component tests (Vitest, jsdom)
+npm run test:e2e     # 62 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 npm run test:visual  # pixel comparison against the approved look (14 screenshots)
 ```

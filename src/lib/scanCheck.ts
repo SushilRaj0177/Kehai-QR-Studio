@@ -8,14 +8,28 @@ import jsQR from "jsqr";
 
 export type ScanResult =
   | { status: "ok"; decoded: string }
+  /** Decodes only with the colours flipped (a light code on a dark
+   * background): Google Lens and most current phone cameras read it, but
+   * some older scanner apps don't. */
+  | { status: "inverted"; decoded: string }
   | { status: "mismatch"; decoded: string }
   | { status: "unreadable" };
 
 /** Decode a canvas-like image. Returns the raw payload or null. */
-export function decodeImageData(image: ImageData): string | null {
-  // "dontInvert" on purpose: a phone camera app generally won't try the
-  // inverted image either, so only normal-polarity decodes count as a pass.
-  const result = jsQR(image.data, image.width, image.height, { inversionAttempts: "dontInvert" });
+export function decodeImageData(image: ImageData, inverted = false): string | null {
+  // Normal polarity (dark code on light) is what every scanner reads; the
+  // inverted pass is checked separately so it can be reported honestly.
+  // The flip is done here: jsQR's own "onlyInvert" mode crashes.
+  let data = image.data;
+  if (inverted) {
+    data = new Uint8ClampedArray(image.data);
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = 255 - data[i];
+      data[i + 1] = 255 - data[i + 1];
+      data[i + 2] = 255 - data[i + 2];
+    }
+  }
+  const result = jsQR(data, image.width, image.height, { inversionAttempts: "dontInvert" });
   return result ? bytesToUtf8(result.binaryData) : null;
 }
 
@@ -40,9 +54,12 @@ export async function blobToImageData(blob: Blob): Promise<ImageData> {
 }
 
 export async function verifyScan(blob: Blob, expected: string): Promise<ScanResult> {
-  const decoded = decodeImageData(await blobToImageData(blob));
-  if (decoded === null) return { status: "unreadable" };
-  return decoded === expected ? { status: "ok", decoded } : { status: "mismatch", decoded };
+  const image = await blobToImageData(blob);
+  const decoded = decodeImageData(image);
+  if (decoded !== null) return decoded === expected ? { status: "ok", decoded } : { status: "mismatch", decoded };
+  const flipped = decodeImageData(image, true);
+  if (flipped === null) return { status: "unreadable" };
+  return flipped === expected ? { status: "inverted", decoded: flipped } : { status: "mismatch", decoded: flipped };
 }
 
 // ------------------------------------------------------------ stress test
@@ -58,7 +75,7 @@ export type StressResult = Record<StressId, boolean>;
  * A perfect digital decode says the data is right; these say how much
  * margin the design has left for real phones.
  */
-export async function stressTest(blob: Blob, expected: string): Promise<StressResult> {
+export async function stressTest(blob: Blob, expected: string, inverted = false): Promise<StressResult> {
   const bitmap = await createImageBitmap(blob);
   const run = (px: number, paint: (ctx: CanvasRenderingContext2D) => void): boolean => {
     const canvas = document.createElement("canvas");
@@ -69,7 +86,7 @@ export async function stressTest(blob: Blob, expected: string): Promise<StressRe
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     paint(ctx);
-    return decodeImageData(ctx.getImageData(0, 0, px, px)) === expected;
+    return decodeImageData(ctx.getImageData(0, 0, px, px), inverted) === expected;
   };
   try {
     return {

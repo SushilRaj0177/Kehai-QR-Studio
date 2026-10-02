@@ -143,6 +143,9 @@ export const JA: Record<string, string> = {
     "デザインのどこかがデータを壊しています。誤り訂正を上げてみてください。",
   "Won't scan": "読み取れません",
   "Couldn't run the scan check": "読み取りチェックを実行できませんでした",
+  "Scans in modern apps only": "最近のアプリでのみ読み取り可能",
+  "Google Lens and most current phone cameras read this light-on-dark code, but some older scanner apps can't. A dark code on a light background works everywhere.":
+    "Google レンズや最近のスマホのカメラなら、この明るい色のコード（暗い背景）も読み取れますが、古い読み取りアプリでは読めないことがあります。明るい背景に暗いコードなら、どのアプリでも読み取れます。",
   "This is a problem with the checker, not your code. Reload the page to try again.": "コードではなくチェック機能の問題です。ページを再読み込みしてもう一度お試しください。",
   "The rendered code can't be decoded. Fix the issues below.": "生成したコードをデコードできません。下の問題を直してください。",
   "level {level}": "レベル {level}",
@@ -189,8 +192,8 @@ export const JA: Record<string, string> = {
   "May fail in dim light or on glossy prints. 4:1 or higher is recommended.":
     "暗い場所や光沢のある印刷物では読み取れないことがあります。4:1 以上を推奨します。",
   "Inverted colours": "色が反転しています",
-  "A light code on a dark background can't be read by many scanner apps and older phones. Use a darker code colour than the background.":
-    "暗い背景に明るいコードは、多くの読み取りアプリや古いスマホで読めません。コードの色を背景より暗くしてください。",
+  "A light code on a dark background only scans in apps that also try flipped colours (Google Lens and most current phone cameras do; some older scanner apps don't). A darker code than the background works everywhere.":
+    "暗い背景に明るいコードは、色を反転して読み取れるアプリでのみ読めます（Google レンズや最近のスマホのカメラは対応、古い読み取りアプリは非対応のことがあります）。背景より暗いコードなら、どこでも読み取れます。",
   "No quiet zone": "余白（クワイエットゾーン）がありません",
   "Scanners need empty space around the code to find its edges. Increase the margin to at least 2 modules (4 is ideal).":
     "読み取りにはコードの周りに空白が必要です。余白を 2 モジュール以上（理想は 4）にしてください。",

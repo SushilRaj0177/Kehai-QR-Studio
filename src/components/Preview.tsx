@@ -44,6 +44,12 @@ function ScanBadge({ scan, issues }: { scan: ScanState; issues: ReadabilityIssue
     tone = hasError ? "bad" : hasWarn ? "warn" : "good";
     title = hasError ? t("Scans here — risky on phones") : hasWarn ? t("Scans, with caveats") : t("Scan verified");
     detail = hasError || hasWarn ? t("Decoded correctly, but see the warnings below.") : t("The rendered code decodes back to your exact content.");
+  } else if (scan.status === "inverted") {
+    // A light code on a dark background: modern scanners flip it and read
+    // it fine, but not every app does, so it's a caveat, not a failure.
+    tone = hasError ? "bad" : "warn";
+    title = t("Scans in modern apps only");
+    detail = t("Google Lens and most current phone cameras read this light-on-dark code, but some older scanner apps can't. A dark code on a light background works everywhere.");
   } else if (scan.status === "mismatch") {
     tone = "bad";
     title = t("Decodes to the wrong content");
@@ -218,7 +224,7 @@ export function Preview(props: Props) {
       </p>
 
       <ScanBadge scan={scan} issues={payload ? issues : []} />
-      {payload && scan.status === "ok" && scan.stress && <StressChips stress={scan.stress} />}
+      {payload && (scan.status === "ok" || scan.status === "inverted") && scan.stress && <StressChips stress={scan.stress} />}
 
       {payload && issues.length > 0 && (
         <ul className="issues" aria-label={t("Readability warnings")}>

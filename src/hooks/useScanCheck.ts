@@ -56,9 +56,9 @@ export function useScanCheck(
       setState(result);
       // Only worth stress-testing a code that decodes in the first place.
       // It's an extra: if it fails on some browser, the verified result stands.
-      if (result.status !== "ok") return;
+      if (result.status !== "ok" && result.status !== "inverted") return;
       try {
-        const stress = await mod.stressTest(blob, payload);
+        const stress = await mod.stressTest(blob, payload, result.status === "inverted");
         if (!cancelled) setState({ ...result, stress });
       } catch {
         /* keep the verified result without stress chips */

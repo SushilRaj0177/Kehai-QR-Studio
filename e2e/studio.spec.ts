@@ -475,3 +475,20 @@ test("Download asks for a format: picture (PNG, recommended) or vector (SVG)", a
   // The separate SVG button is gone: the menu is the one place to choose.
   await expect(page.getByRole("button", { name: /^SVG$/ })).toHaveCount(0);
 });
+
+test("a light code on a dark background is reported honestly: scans in modern apps, not 'won't scan'", async ({ page }) => {
+  // Real-phone report: red on black said "Won't scan", yet Google Lens read it.
+  await page.getByLabel("Website URL").fill("kehai-engine-web.vercel.app");
+  await expectScanState(page, "good");
+  await page.getByLabel("Background", { exact: true }).fill("#000000");
+  await page.getByLabel("Code", { exact: true }).fill("#e0314f");
+  await page.getByRole("radiogroup", { name: "Error correction level" }).getByText("L", { exact: true }).click();
+  await expectScanState(page, "warn");
+  await expect(page.getByTestId("scan-status")).toContainText("Scans in modern apps only");
+  await expect(page.getByText("Inverted colours")).toBeVisible();
+  await expect(page.getByTestId("stress")).toBeVisible(); // stress chips still shown
+
+  // ZXing (Lens-style decoding, which also tries flipped colours) reads the download.
+  const { buffer } = await downloadVia(page, "png");
+  expect(await zxingDecode(buffer)).toBe("https://kehai-engine-web.vercel.app");
+});
