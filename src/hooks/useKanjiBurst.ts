@@ -69,7 +69,7 @@ function burst(x: number, y: number) {
     const dx = Math.cos(angle) * reach;
     const dy = Math.sin(angle) * reach;
     const spin = (Math.random() < 0.5 ? -1 : 1) * (40 + Math.random() * 120);
-    const size = 16 + Math.random() * 10;
+    const size = 12 + Math.random() * 6;
 
     const g = document.createElement("span");
     g.className = "kburst__glyph";
