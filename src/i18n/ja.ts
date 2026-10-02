@@ -79,8 +79,8 @@ export const JA: Record<string, string> = {
   "Open as a page when scanned (recommended)": "読み取るとページで表示する（おすすめ）",
   "Every camera app opens it: scanning shows your text on a clean page. The text travels inside the link itself — nothing is uploaded — but the scanner needs internet.":
     "どのカメラアプリでも開けます。読み取るとテキストが見やすいページに表示されます。テキストはリンクの中にだけ含まれ、どこにもアップロードされません（読み取る側にはインターネット接続が必要です）。",
-  "Raw text works offline, but many camera apps only offer an image search for it (Google Lens shows “Search barcode”). A QR scanner app shows the text.":
-    "テキストのままならオフラインでも使えますが、多くのカメラアプリでは画像検索しか表示されません（Google レンズでは「バーコードを検索」）。QR コードリーダーアプリならテキストが表示されます。",
+  "Raw text works offline and pops up when scanned with the phone's normal camera. Google Lens doesn't show it: it treats the code as an image and returns search results (an AI overview of the barcode) instead of the text.":
+    "テキストのままならオフラインでも使え、スマホの標準カメラで読み取るとテキストが表示されます。Google レンズではテキストは表示されず、コードを画像として扱って検索結果（バーコードについての AI による概要）が出てしまいます。",
   "Anything — a note, a code, a message…": "メモ、コード、メッセージなど何でも…",
   To: "宛先",
   Subject: "件名",

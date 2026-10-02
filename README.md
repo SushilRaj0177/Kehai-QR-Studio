@@ -75,7 +75,7 @@ The browser's built-in `<input type="color">` looks and behaves very differently
 
 ### Text codes that open as a page
 
-Real-device testing showed a problem with plain-text QR codes: many camera apps do nothing useful with raw text. Google Lens, for example, offers "Search barcode", an image search, and never shows the message. So by default a **Text** code now holds a link to a tiny page that displays the text:
+Real-device testing showed a problem with plain-text QR codes. The phone's **normal camera** pops up the text fine, but **Google Lens doesn't show it at all**: it treats the code as an image and returns search results (an AI overview explaining that the barcode seems to contain text) instead of the message. Plenty of people scan with Lens. So by default a **Text** code now holds a link to a tiny page that displays the text:
 
 ```
 https://kehai-qr-studio.vercel.app/t/#UHJldHRpZXN0IHNvdWwhIDwz
@@ -85,7 +85,7 @@ https://kehai-qr-studio.vercel.app/t/#UHJldHRpZXN0IHNvdWwhIDwz
 - **Every camera app opens links**, so every scanner shows the message, on a clean page with **Copy** and **Share** buttons and tappable links. It follows the system light/dark theme, or your saved one, and switches to Japanese on Japanese phones.
 - **Still no server or database.** The text lives in the URL **fragment** (after `#`), which browsers never send to a server. `/t/` is a static page (a second Vite entry, `t/index.html` + `src/viewer/`, ~3 kB JS, no React) that reads the fragment in the browser.
 - **Safe with hostile input:** the text is inserted with `textContent` only, never as HTML, and only `http(s)` links become clickable (with `rel="noopener noreferrer nofollow"`). An e2e test scans a code containing an `<img onerror>` payload and checks it shows as text and never runs.
-- **Trade-offs, stated in the UI:** the scanner needs internet, and the code is a little denser (base64 adds about a third). One checkbox switches back to **raw text**, which works offline but leaves the display to the scanner app. Recent codes saved before this change stay raw text.
+- **Trade-offs, stated in the UI:** the scanner needs internet, and the code is a little denser (base64 adds about a third). One checkbox switches back to **raw text**, which works offline and shows up in the normal camera, but not in Google Lens (the note under the checkbox says so). Recent codes saved before this change stay raw text.
 - The service worker caches each page under its own path, so `/t/` also works offline after a visit.
 
 ### Design links
@@ -179,7 +179,7 @@ All six presets pass all three. Grey-on-white fails *Dim light*, and a 400-chara
 
 **Failure isolation:** if the checker itself can't run (the decoder fails to load, or canvas isn't available), the badge says *"Couldn't run the scan check"*, never *"Won't scan"*: a broken tool must not condemn a good code. The stress test is an extra; if it fails on some browser, the verified result stands without the chips. Unit-tested with a mocked decoder.
 
-**Plain text and camera apps:** a valid text code can still look like it "didn't scan", because some built-in phone camera apps only pop up for actionable content (links, Wi-Fi, contacts). The Text tab says so and points to Google Lens or a scanner app. This was found in real-device testing: the codes themselves decode correctly in both jsQR and ZXing.
+**Plain text and camera apps:** a valid raw-text code can still look like it "didn't scan". Real-device testing showed the text pops up when scanned with the phone's **normal camera**, but **Google Lens** never shows it: it returns image-search results (an AI overview of "a barcode containing text") instead. The codes themselves decode correctly in both jsQR and ZXing. That's why Text codes open as a page by default (below), and the Text tab explains the trade-off when raw text is chosen.
 
 ### 2. Readability analysis
 

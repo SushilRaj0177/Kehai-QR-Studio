@@ -369,7 +369,7 @@ test("text codes open as a page by default, showing the exact text", async ({ pa
 
   // Raw mode is one click away and explains the trade-off.
   await page.getByTestId("text-as-page").uncheck();
-  await expect(page.getByTestId("text-scan-note")).toContainText("Search barcode");
+  await expect(page.getByTestId("text-scan-note")).toContainText("normal camera");
   await expect(page.getByTestId("payload")).toHaveText(message);
 });
 

@@ -105,7 +105,7 @@ export function ContentForm({ kind, fields, errors, visible, onKind, onChange, o
             <p className="kind-note" data-testid="text-scan-note">
               {fields.text.asPage
                 ? t("Every camera app opens it: scanning shows your text on a clean page. The text travels inside the link itself — nothing is uploaded — but the scanner needs internet.")
-                : t("Raw text works offline, but many camera apps only offer an image search for it (Google Lens shows “Search barcode”). A QR scanner app shows the text.")}
+                : t("Raw text works offline and pops up when scanned with the phone's normal camera. Google Lens doesn't show it: it treats the code as an image and returns search results (an AI overview of the barcode) instead of the text.")}
             </p>
           </>
         )}

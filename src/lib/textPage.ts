@@ -1,8 +1,9 @@
 /**
  * Text pages: a plain-text QR code that opens as a page instead.
  *
- * Many camera apps do nothing useful with raw text (Google Lens offers an
- * image search), but every one opens a link. So a text code can hold
+ * Raw text only pops up in the phone's normal camera; Google Lens treats the
+ * code as an image and shows search results (an AI overview) instead. Every
+ * scanner opens a link, though, so a text code can hold
  * https://<studio>/t/#<text>, and /t/ displays the text. The text travels in
  * the URL fragment, which browsers never send to a server: nothing is
  * uploaded or stored, and the page works from any static host.
