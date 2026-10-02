@@ -22,7 +22,7 @@ test("a link's website logo is added to the centre automatically", async ({ page
   for (const r of requests) expect(r).not.toContain("gdg-on-campus-srm");
 
   // The logo is really in the image, and the code still decodes.
-  const file = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+  const file = decodePng((await downloadVia(page, "png")).buffer);
   expect(file.text).toBe("https://gdg.community.dev/gdg-on-campus-srm");
   const mid = (Math.floor(file.height / 2) * file.width + Math.floor(file.width / 2)) * 4;
   expect([...file.data.subarray(mid, mid + 3)]).toEqual([255, 45, 85]);

@@ -26,8 +26,10 @@ export async function readDownload(download: Download): Promise<Buffer> {
 }
 
 /** Click a download button and return the file's bytes + suggested name. */
-export async function downloadVia(page: Page, buttonName: RegExp) {
-  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: buttonName }).click()]);
+/** Download through the Download menu: "png" (picture) or "svg" (vector). */
+export async function downloadVia(page: Page, format: "png" | "svg") {
+  await page.getByTestId("download").click();
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId(`download-${format}`).click()]);
   return { name: download.suggestedFilename(), buffer: await readDownload(download) };
 }
 

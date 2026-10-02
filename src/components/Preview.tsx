@@ -1,4 +1,4 @@
-import type { MutableRefObject } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MutableRefObject } from "react";
 import type { ScanState } from "../hooks/useScanCheck";
 import type { QrDesign } from "../lib/design";
 import type { ReadabilityIssue } from "../lib/readability";
@@ -96,6 +96,94 @@ function StressChips({ stress }: { stress: StressResult }) {
   );
 }
 
+/**
+ * One Download button that asks which format: a picture (PNG, the default,
+ * shows in a phone's gallery) or a vector (SVG, for designers). JPG is
+ * deliberately not offered: its compression smudges the squares.
+ */
+function DownloadMenu({ disabled, busy, onDownload }: { disabled: boolean; busy: boolean; onDownload: (ext: "png" | "svg") => void }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const itemsRef = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    itemsRef.current[0]?.focus({ preventScroll: true });
+    const onDown = (e: globalThis.PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open]);
+
+  const close = () => {
+    setOpen(false);
+    buttonRef.current?.focus({ preventScroll: true });
+  };
+  const pick = (ext: "png" | "svg") => {
+    setOpen(false);
+    onDownload(ext);
+  };
+  const onMenuKey = (e: ReactKeyboardEvent) => {
+    const items = itemsRef.current.filter(Boolean) as HTMLButtonElement[];
+    const i = items.indexOf(document.activeElement as HTMLButtonElement);
+    if (e.key === "Escape") {
+      e.preventDefault();
+      close();
+    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      items[(i + (e.key === "ArrowDown" ? 1 : items.length - 1)) % items.length]?.focus();
+    } else if (e.key === "Tab") {
+      setOpen(false);
+    }
+  };
+
+  const options = [
+    { ext: "png" as const, title: t("Picture (PNG)"), note: t("Best for phones, chats and printing. Shows up with your photos.") },
+    { ext: "svg" as const, title: t("Vector (SVG)"), note: t("For designers: scales to any size. Won't appear in your photo gallery.") },
+  ];
+
+  return (
+    <div className="download" ref={rootRef}>
+      <button
+        ref={buttonRef}
+        type="button"
+        className="btn btn--ghost"
+        disabled={disabled}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        data-testid="download"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <Icon name="download" /> {busy ? t("Preparing…") : t("Download")}
+      </button>
+      {open && (
+        <div className="download__menu" role="menu" aria-label={t("Download format")} onKeyDown={onMenuKey}>
+          {options.map((o, i) => (
+            <button
+              key={o.ext}
+              ref={(el) => (itemsRef.current[i] = el)}
+              type="button"
+              role="menuitem"
+              className="download__item"
+              data-testid={`download-${o.ext}`}
+              onClick={() => pick(o.ext)}
+            >
+              <span className="download__title">
+                {o.title}
+                {o.ext === "png" && <span className="download__badge">{t("Recommended")}</span>}
+              </span>
+              <span className="download__note">{o.note}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Preview(props: Props) {
   const { containerRef, payload, placeholder, design, scan, issues, busy, canCopy, canShare, onShare, onDownload, onCopy, onSave, onCopyLink, imageUrl, highlight } = props;
   const { t } = useI18n();
@@ -141,16 +229,8 @@ export function Preview(props: Props) {
       )}
 
       <div className="actions">
-        <button type="button" className="btn btn--primary" disabled={disabled} onClick={() => onDownload("png")}>
-          <span>{busy === "png" ? t("Preparing…") : t("Download PNG")}</span>
-          <span className="btn__disc">
-            <Icon name="download" />
-          </span>
-        </button>
         <div className={`actions__row${canShare ? " actions__row--4" : ""}`}>
-          <button type="button" className="btn btn--ghost" disabled={disabled} onClick={() => onDownload("svg")}>
-            <Icon name="download" /> SVG
-          </button>
+          <DownloadMenu disabled={disabled} busy={busy === "png" || busy === "svg"} onDownload={onDownload} />
           <button
             type="button"
             className="btn btn--ghost"

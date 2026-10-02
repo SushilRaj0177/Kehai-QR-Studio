@@ -64,7 +64,7 @@ test.describe("every QR type generates, downloads and scans back correctly", () 
       await expectScanState(page, "good");
       await expect(page.getByTestId("payload")).toHaveText(c.expected);
 
-      const { name, buffer } = await downloadVia(page, /Download PNG/);
+      const { name, buffer } = await downloadVia(page, "png");
       expect(name).toMatch(/^qr-.*\.png$/);
       const png = decodePng(buffer);
       expect(png.text).toBe(c.expected);
@@ -80,7 +80,7 @@ test("the downloaded PNG is pixel-identical to the preview", async ({ page }) =>
   await expectScanState(page, "good");
 
   const preview = decodePng(await previewPng(page));
-  const { buffer } = await downloadVia(page, /Download PNG/);
+  const { buffer } = await downloadVia(page, "png");
   const file = decodePng(buffer);
 
   expect(file.width).toBe(preview.width);
@@ -96,7 +96,7 @@ test("customisation changes the output immediately", async ({ page }) => {
   await page.getByLabel("Size value").fill("512");
   await page.getByLabel("Size value").blur();
   await expect(page.getByText("512 × 512 px")).toBeVisible();
-  let file = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+  let file = decodePng((await downloadVia(page, "png")).buffer);
   expect(file.width).toBe(512);
   expect(file.text).toBe("https://example.com");
 
@@ -104,7 +104,7 @@ test("customisation changes the output immediately", async ({ page }) => {
   await page.getByLabel("Background", { exact: true }).fill("#fff1f5");
   await page.getByLabel("Code", { exact: true }).fill("#831843");
   await expectScanState(page, "good");
-  file = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+  file = decodePng((await downloadVia(page, "png")).buffer);
   expect([...file.data.subarray(0, 3)]).toEqual([0xff, 0xf1, 0xf5]);
   expect(file.text).toBe("https://example.com");
 
@@ -131,7 +131,7 @@ test("presets apply and remain editable", async ({ page }) => {
 });
 
 test("invalid input shows errors and blocks export", async ({ page }) => {
-  const download = page.getByRole("button", { name: /Download PNG/ });
+  const download = page.getByTestId("download");
 
   await page.getByLabel("Website URL").fill("not a url");
   await page.getByLabel("Website URL").blur();
@@ -177,14 +177,14 @@ test("a logo raises error correction and still scans", async ({ page }) => {
   await expect(page.getByAltText("Current logo")).toBeVisible();
   await expect(page.getByText(/level H/)).toBeVisible();
   await expectScanState(page, "good");
-  const file = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+  const file = decodePng((await downloadVia(page, "png")).buffer);
   expect(file.text).toBe("https://example.com");
 });
 
 test("SVG export is a valid SVG document", async ({ page }) => {
   await page.getByLabel("Website URL").fill("example.com");
   await expectScanState(page, "good");
-  const { name, buffer } = await downloadVia(page, /^SVG$/);
+  const { name, buffer } = await downloadVia(page, "svg");
   expect(name).toMatch(/\.svg$/);
   const svg = buffer.toString("utf8");
   expect(svg).toContain("<svg");
@@ -194,7 +194,7 @@ test("SVG export is a valid SVG document", async ({ page }) => {
 test("recent codes persist across a refresh and can be reused", async ({ page }) => {
   await page.getByLabel("Website URL").fill("gdg.community.dev");
   await expectScanState(page, "good");
-  await downloadVia(page, /Download PNG/);
+  await downloadVia(page, "png");
 
   await pickKind(page, "Phone");
   await page.getByLabel("Phone number").fill("+91 90000 00000");
@@ -266,7 +266,7 @@ test.describe("design links", () => {
     await page.getByLabel("Text", { exact: true }).fill("Shared · 共有 🌸");
     await page.getByRole("button", { name: /Sakura/ }).click();
     await expectScanState(page, "good");
-    const original = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+    const original = decodePng((await downloadVia(page, "png")).buffer);
 
     await page.getByTestId("copy-link").click();
     await expect(page.getByTestId("toast")).toContainText("Link copied");
@@ -281,7 +281,7 @@ test.describe("design links", () => {
     await expect(other.getByRole("button", { name: /Sakura/ })).toHaveAttribute("aria-pressed", "true");
     expect(new URL(other.url()).hash).toBe(""); // address bar tidied
     await expectScanState(other, "good");
-    const copy = decodePng((await downloadVia(other, /Download PNG/)).buffer);
+    const copy = decodePng((await downloadVia(other, "png")).buffer);
     expect(copy.text).toBe(original.text);
     expect(Buffer.compare(copy.data, original.data)).toBe(0); // same pixels
   });
@@ -309,12 +309,12 @@ test("a contact needs a phone number; everything else is optional", async ({ pag
   await page.locator("#contact-phone").focus();
   await page.locator("#contact-phone").blur();
   await expect(page.getByText("Enter a phone number.")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Download PNG/ })).toBeDisabled();
+  await expect(page.getByTestId("download")).toBeDisabled();
 
   await page.locator("#contact-name").fill("");
   await page.locator("#contact-phone").fill("+91 98765 43210");
   await expectScanState(page, "good");
-  const file = decodePng((await downloadVia(page, /Download PNG/)).buffer);
+  const file = decodePng((await downloadVia(page, "png")).buffer);
   expect(file.text).toContain("FN:+919876543210");
   expect(file.text).toContain("TEL;TYPE=CELL:+919876543210");
 });
@@ -353,7 +353,7 @@ test("text codes open as a page by default, showing the exact text", async ({ pa
   await expectScanState(page, "good");
 
   // The code holds a link to /t/ — readable by both decoders.
-  const { buffer } = await downloadVia(page, /Download PNG/);
+  const { buffer } = await downloadVia(page, "png");
   const link = decodePng(buffer).text!;
   expect(link).toMatch(/^http:\/\/localhost:\d+\/t\/#[A-Za-z0-9_-]+$/);
   expect(await zxingDecode(buffer)).toBe(link);
@@ -442,7 +442,36 @@ test("every preset scans cleanly and passes all three camera stress tests", asyn
     await page.getByRole("button", { name: new RegExp(name) }).click();
     await expectScanState(page, "good"); // verified, and no readability warnings
     await expect(page.getByTestId("stress")).toHaveAttribute("data-passed", "3");
-    const { buffer } = await downloadVia(page, /Download PNG/);
+    const { buffer } = await downloadVia(page, "png");
     expect(await zxingDecode(buffer)).toBe("https://gdg.community.dev/gdg-on-campus-srm");
   }
+});
+
+test("Download asks for a format: picture (PNG, recommended) or vector (SVG)", async ({ page }) => {
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  const button = page.getByTestId("download");
+  await expect(button).toHaveAccessibleName("Download");
+  await button.click();
+  const menu = page.getByRole("menu", { name: "Download format" });
+  await expect(menu.getByRole("menuitem")).toHaveCount(2);
+  await expect(page.getByTestId("download-png")).toContainText("Recommended");
+  await expect(page.getByTestId("download-png")).toBeFocused(); // keyboard-ready
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByTestId("download-svg")).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(menu).toHaveCount(0);
+  await expect(button).toBeFocused();
+  // Clicking outside closes it too.
+  await button.click();
+  await page.getByRole("heading", { name: "Make it yours" }).click();
+  await expect(menu).toHaveCount(0);
+
+  const png = await downloadVia(page, "png");
+  expect(png.name).toMatch(/\.png$/);
+  expect(decodePng(png.buffer).text).toBe("https://gdg.community.dev");
+  const svg = await downloadVia(page, "svg");
+  expect(svg.name).toMatch(/\.svg$/);
+  // The separate SVG button is gone: the menu is the one place to choose.
+  await expect(page.getByRole("button", { name: /^SVG$/ })).toHaveCount(0);
 });

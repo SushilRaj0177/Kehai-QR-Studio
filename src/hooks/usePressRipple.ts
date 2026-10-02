@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 const PRESSABLE =
-  ".btn, .icon-button, .lang-toggle, .chip, .kind-tab, .preset, .segmented__item, .link-button, .dropzone, .recent-card__use, .color-input__swatch, .color-picker__swatch";
+  ".btn, .icon-button, .lang-toggle, .chip, .kind-tab, .preset, .segmented__item, .link-button, .dropzone, .recent-card__use, .color-input__swatch, .color-picker__swatch, .download__item";
 
 /**
  * One delegated listener gives every pressable element a ripple that

@@ -49,7 +49,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop; the preview stays pinned only alongside the content and design panels and stops above Recent codes, rather than sliding under them (the working panels have their own grid, `.layout__main`). On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **108 unit/component tests** (Vitest) plus **58 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **108 unit/component tests** (Vitest) plus **59 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (Chrome directly; Samsung Internet via its long-press image menu, see below) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -122,6 +122,15 @@ The **日本語 / EN** button in the top bar switches the whole interface: label
 - **Tested:**
   - a unit test scans the source for every `t("…")` call and fails if any string has no Japanese translation, if an unused translation is left over, or if the placeholders differ;
   - end-to-end tests switch language, check translated errors and the scan status, decode a download made in Japanese, confirm the choice survives a reload, confirm a `ja-JP` browser starts in Japanese, and confirm the Japanese UI doesn't overflow a 360 px phone.
+
+### Download: picture or vector
+
+The export buttons are a 2×2 grid: **Download · Copy / Share · Save**. On desktop, where Share isn't available, they sit in one row of three. **Download** asks which format, so nobody ends up with a file their gallery can't show:
+
+- **Picture (PNG)**, recommended: perfectly sharp edges, and it shows up with your photos. **JPG isn't offered**: its compression smudges the squares and can hurt scanning.
+- **Vector (SVG)**: for designers and print at any size, clearly labelled as not appearing in a photo gallery.
+
+It's a proper menu: focus moves to the first option, arrow keys move between options, Escape or a click outside closes it, and focus returns to the button.
 
 ### Notifications
 
@@ -325,7 +334,7 @@ Requires Node 18+.
 
 ```bash
 npm test             # 108 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 58 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run test:e2e     # 59 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
 npm run test:visual  # pixel comparison against the approved look (14 screenshots)
 ```

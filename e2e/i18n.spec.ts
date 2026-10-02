@@ -30,7 +30,7 @@ test("switches to Japanese, keeps working, and remembers the choice", async ({ p
   await expect(page.getByTestId("scan-status")).toContainText("読み取り確認済み");
 
   // The QR content itself is never translated.
-  const file = decodePng((await downloadVia(page, /PNG をダウンロード/)).buffer);
+  const file = decodePng((await downloadVia(page, "png")).buffer);
   expect(file.text).toBe("https://gdg.community.dev");
 
   await page.reload();
