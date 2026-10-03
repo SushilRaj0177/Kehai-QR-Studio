@@ -13,7 +13,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "screenshots": "playwright test --project=screenshots",
-    "test:visual": "playwright test --project=visual"
+    "test:visual": "playwright test --project=visual",
+    "test:visual:docker": "docker run --rm --ipc=host -v \"$PWD\":/work -v /work/node_modules -w /work mcr.microsoft.com/playwright:v1.56.1-noble bash -c \"npm ci --no-audit --no-fund && npx playwright test --project=visual\"",
+    "test:visual:update": "docker run --rm --ipc=host -v \"$PWD\":/work -v /work/node_modules -w /work mcr.microsoft.com/playwright:v1.56.1-noble bash -c \"npm ci --no-audit --no-fund && npx playwright test --project=visual --update-snapshots\""
   },
   "engines": {
     "node": ">=18"

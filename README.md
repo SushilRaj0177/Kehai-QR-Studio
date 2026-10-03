@@ -343,10 +343,14 @@ Requires Node 18+.
 npm test             # 114 unit + component tests (Vitest, jsdom)
 npm run test:e2e     # 65 end-to-end tests in Chromium (desktop + Pixel 7)
 npm run screenshots  # regenerate docs/screenshots
-npm run test:visual  # pixel comparison against the approved look (14 screenshots)
+npm run test:visual:docker  # pixel comparison against the approved look (14 screenshots), in Docker
 ```
 
-**Visual regression (`npm run test:visual`).** The approved look is stored as 14 baseline screenshots (phone and desktop, dark and light, several scroll positions) in `e2e/visual.spec.ts-snapshots/`. The check fails if more than 50 pixels change beyond a 2% colour tolerance; a deliberate 2 px change to the panels' corner radius is caught (223 pixels). It runs locally before any CSS/layout change, not in CI, because font rendering differs slightly between machines. If a change is meant to alter the look and has been approved, run `npm run test:visual -- --update-snapshots`.
+**Visual regression (`npm run test:visual`).** The approved look is stored as 14 baseline screenshots (phone and desktop, dark and light, several scroll positions) in `e2e/visual.spec.ts-snapshots/`. The check fails if more than 50 pixels change beyond a 2% colour tolerance; a deliberate 2 px change to the panels' corner radius is caught (223 pixels). It runs **in CI on every push**, inside Playwright's official Docker image (`mcr.microsoft.com/playwright:v1.56.1-noble`), and the baselines are generated in that same image. Different machines draw text very slightly differently (the system font behind "日本語", for example), so baselines made on one computer and checked on another failed with about 1% "fake" differences even when nothing had changed. Generating and checking them in one identical container removes that, so only real design changes fail. (The fix came from a reader's suggestion on LinkedIn.) A CI step also fails if the Playwright version and the image ever drift apart, and the diffs are uploaded when the check fails.
+- Check locally (needs Docker): `npm run test:visual:docker`.
+- After an approved change to the look: `npm run test:visual:update`, then commit the new screenshots.
+
+Both commands install dependencies inside the container into their own volume, so your local `node_modules` is untouched and they work from Windows, macOS or Linux.
 
 What the end-to-end suite verifies, in a real browser:
 

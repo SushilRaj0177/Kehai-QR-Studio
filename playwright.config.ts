@@ -27,7 +27,9 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }, testIgnore: /(screenshots|responsive|visual)/ },
     { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /responsive/ },
     { name: "screenshots", testMatch: /screenshots/ },
-    // Pixel comparison against the approved look (local only, not CI).
+    // Pixel comparison against the approved look. Runs in CI inside Playwright's
+    // official image; generate and check baselines in that same image
+    // (npm run test:visual:docker / test:visual:update) so fonts match.
     { name: "visual", testMatch: /visual/, use: { deviceScaleFactor: 1, serviceWorkers: "block" } },
   ],
 });

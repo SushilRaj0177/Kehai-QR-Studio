@@ -25,3 +25,29 @@ jobs:
         run: npx playwright test --project=desktop --project=mobile
         env:
           CI: "true"
+
+  # Pixel comparison against the approved look. It runs inside Playwright's
+  # official image, the same container the baselines are generated in
+  # (npm run test:visual:update), so fonts are drawn identically on both
+  # sides and only real design changes fail.
+  visual:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+      options: --ipc=host
+    steps:
+      - uses: actions/checkout@v4
+      - name: Playwright version matches the container image
+        run: test "$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" = "1.56.1"
+      - run: npm ci
+      - name: Visual regression
+        run: npx playwright test --project=visual
+        env:
+          CI: "true"
+          HOME: /root
+      - name: Upload diffs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: test-results/

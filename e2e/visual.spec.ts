@@ -3,10 +3,12 @@ import { expectScanState, stubSiteLogos } from "./helpers";
 
 /**
  * Visual regression: the approved look of the studio, pixel by pixel.
- * Run before any change that touches CSS or layout:  npm run test:visual
- * If a difference is *intended* (and approved), refresh the baselines with
- * npm run test:visual -- --update-snapshots
- * Not part of CI: font rasterisation differs slightly between machines.
+ * Runs in CI inside Playwright's official Docker image, and the baselines
+ * are generated in that same image, so font rendering is identical on both
+ * sides (different machines draw text slightly differently, e.g. the
+ * system font behind "日本語", which would otherwise fail as a fake diff).
+ * Check locally (needs Docker):           npm run test:visual:docker
+ * Refresh after an approved look change:  npm run test:visual:update
  */
 const views = {
   phone: { width: 412, height: 915 },
