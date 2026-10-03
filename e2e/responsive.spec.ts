@@ -340,3 +340,35 @@ test("haptics: a tap on a button, a grab and steps on a slider, a buzz for succe
   await expect(page.getByTestId("toast")).toContainText("Downloaded PNG");
   expect(await buzzes()).toEqual([8, 8, [10, 60, 18]]);
 });
+
+test("haptics: a scroll that starts on a button never buzzes or ripples; a tap still does", async ({ page }) => {
+  const buzzes = await recordVibrations(page);
+  await page.goto("/");
+  await page.getByLabel("Website URL").fill("gdg.community.dev");
+  await expectScanState(page, "good");
+  const preset = page.getByRole("button", { name: /Sakura/ });
+  await preset.scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.scrollBy(0, 150)); // room to scroll both ways
+  await page.waitForTimeout(200);
+  await buzzes();
+
+  // A real finger swipe that starts on the button: the page scrolls.
+  let box = (await preset.boundingBox())!;
+  const start: [number, number] = [box.x + box.width / 2, box.y + box.height / 2];
+  const y0 = await page.evaluate(() => scrollY);
+  await touchPath(page, line(start, [start[0] + 4, start[1] - 220]));
+  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(y0 + 80);
+  expect(await buzzes()).toEqual([]);
+  expect(await page.locator(".preset .ripple").count()).toBe(0);
+  await expect(preset).toHaveAttribute("aria-pressed", "false"); // and it wasn't pressed
+
+  // A clean tap on the same button: one tap, a ripple, and it's selected.
+  await expect.poll(async () => { const a = await page.evaluate(() => scrollY); await page.waitForTimeout(150); return (await page.evaluate(() => scrollY)) - a; }).toBe(0);
+  // The swipe left it under the sticky top bar: bring it back to mid-screen.
+  await preset.evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await page.waitForTimeout(200);
+  box = (await preset.boundingBox())!;
+  await touchPath(page, [[box.x + box.width / 2, box.y + box.height / 2]]);
+  expect(await buzzes()).toEqual([8]);
+  await expect(preset).toHaveAttribute("aria-pressed", "true");
+});
