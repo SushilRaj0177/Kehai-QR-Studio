@@ -9,8 +9,6 @@
 A browser-only QR code generator and designer for links, text, email, phone numbers, Wi-Fi and contact cards.
 It verifies every design live by decoding the exact image you're about to download, and puts a link's own website logo in the centre automatically.
 
-<a href="https://kehai-qr-studio.vercel.app"><img alt="Live app: kehai-qr-studio.vercel.app" src="https://img.shields.io/badge/LIVE%20APP-kehai--qr--studio.vercel.app-ff2d55?style=for-the-badge"></a>
-
 **[Try it live → kehai-qr-studio.vercel.app](https://kehai-qr-studio.vercel.app)**
 
 React · TypeScript · Vite · qr-code-styling · jsQR · Vitest · Playwright

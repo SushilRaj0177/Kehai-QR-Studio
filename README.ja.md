@@ -9,8 +9,6 @@
 リンク、テキスト、メール、電話番号、Wi-Fi、連絡先に対応した、ブラウザだけで動く QR コードの生成・デザインツールです。
 これからダウンロードする画像そのものを毎回デコードして、デザインが読み取れるかをその場で検証します。リンクの場合は、そのウェブサイトのロゴを自動で中央に配置します。
 
-<a href="https://kehai-qr-studio.vercel.app"><img alt="公開中のアプリ: kehai-qr-studio.vercel.app" src="https://img.shields.io/badge/LIVE%20APP-kehai--qr--studio.vercel.app-ff2d55?style=for-the-badge"></a>
-
 **[公開中のアプリを試す → kehai-qr-studio.vercel.app](https://kehai-qr-studio.vercel.app)**
 
 React · TypeScript · Vite · qr-code-styling · jsQR · Vitest · Playwright
