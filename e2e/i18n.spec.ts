@@ -47,3 +47,32 @@ test.describe("browser language", () => {
     await expect(page.getByTestId("lang-toggle")).toHaveText("EN");
   });
 });
+
+// ダウンロード is about twice as wide as コピー or 保存. In three equal columns it
+// broke mid-word and made the action row taller than in English.
+test("Japanese action buttons stay on one line, as tall as in English", async ({ page }) => {
+  const rowHeight = async () =>
+    page.evaluate(() =>
+      Array.from(document.querySelectorAll(".actions__row > .download > .btn, .actions__row > .btn")).map((el) => {
+        const text = Array.from(el.childNodes).map((n) => n.textContent ?? "").join("").trim();
+        const range = document.createRange();
+        range.selectNodeContents(el.lastChild ?? el);
+        return { text, height: el.getBoundingClientRect().height, lines: range.getClientRects().length };
+      }),
+    );
+  for (const width of [1440, 1024, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.addInitScript(() => localStorage.setItem("kqs.lang", "en"));
+    await page.goto("/");
+    await page.getByLabel("Website URL").fill("gdg.community.dev");
+    const english = await rowHeight();
+    await page.getByTestId("lang-toggle").click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+    const japanese = await rowHeight();
+    expect(japanese.map((b) => b.text)).toContain("ダウンロード");
+    for (const b of japanese) {
+      expect(b.lines, `${b.text} at ${width}px`).toBe(1);
+      expect(b.height, `${b.text} at ${width}px`).toBe(english[0].height);
+    }
+  }
+});

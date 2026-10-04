@@ -412,6 +412,19 @@ html[lang="ja"] .kind-tab__label {
     font-size: 11px;
   }
 }
+/* ダウンロード is twice as wide as コピー or 保存: in three equal columns it
+   broke mid-word and made the whole action row taller. Give Download the
+   wider column, keep every label on one line, and use proportional
+   Japanese glyph widths (palt). English layout is unchanged. */
+html[lang="ja"] .actions__row:not(.actions__row--4) {
+  grid-template-columns: 1.5fr 1fr 1fr;
+}
+html[lang="ja"] .actions__row .btn {
+  white-space: nowrap;
+  font-feature-settings: "palt";
+  gap: 6px;
+  padding-inline: 10px;
+}
 
 /* ---------------------------------------------------------------- layout */
 

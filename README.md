@@ -51,7 +51,7 @@ Every point from the task brief, and where it's handled.
 | 7 | **Scan reliability:** keep codes scannable, warn about risky choices | **Live scan verification** plus **readability analysis** (details below). |
 | 8 | **Recent codes:** stored locally, reusable, survive a refresh | The last 12 codes are saved in `localStorage` with a thumbnail and the full editor state. One click restores the type, fields and design. Duplicates are merged, oversized logos are dropped, and quota errors trim the oldest entries instead of failing. |
 | 9 | **Responsive:** desktop and mobile | Two-column studio with a sticky preview on desktop; the preview stays pinned only alongside the content and design panels and stops above Recent codes, rather than sliding under them (the working panels have their own grid, `.layout__main`). On phones it's a single column with the preview right under the form. Tested at Pixel 7 size and at a 360 px-wide phone (including with a long website-logo domain) with no horizontal scroll. |
-| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **114 unit/component tests** (Vitest) plus **65 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
+| 10 | **Testing:** types, customisation, downloads, invalid input, persistence, responsiveness | **114 unit/component tests** (Vitest) plus **66 end-to-end tests** in real Chromium (Playwright). See [Testing](#testing). |
 
 **Optional enhancements, all implemented:** ✅ SVG download · ✅ logo in the centre · ✅ gradient codes · ✅ copy image to clipboard (Chrome directly; Samsung Internet via its long-press image menu, see below) · ✅ custom module and corner patterns · ✅ dark / light theme.
 
@@ -124,7 +124,7 @@ The **日本語 / EN** button in the top bar switches the whole interface: label
 - **Typography:** Japanese text uses the system's Japanese fonts. The bundled Noto Sans JP is only a heavy kanji subset for the watermarks. Letter-spaced uppercase labels switch to the body font, and headings break between phrases (`word-break: auto-phrase`).
 - **Tested:**
   - a unit test scans the source for every `t("…")` call and fails if any string has no Japanese translation, if an unused translation is left over, or if the placeholders differ;
-  - end-to-end tests switch language, check translated errors and the scan status, decode a download made in Japanese, confirm the choice survives a reload, confirm a `ja-JP` browser starts in Japanese, and confirm the Japanese UI doesn't overflow a 360 px phone.
+  - end-to-end tests switch language, check translated errors and the scan status, decode a download made in Japanese, confirm the choice survives a reload, confirm a `ja-JP` browser starts in Japanese, confirm the Japanese UI doesn't overflow a 360 px phone, and confirm the action buttons (ダウンロード · コピー · 保存) stay on one line and as tall as in English. ダウンロード is twice as wide as the other two, so in Japanese it gets the wider column.
 
 ### Download: picture or vector
 
@@ -343,8 +343,8 @@ Requires Node 18+.
 
 ```bash
 npm test             # 114 unit + component tests (Vitest, jsdom)
-npm run test:e2e     # 65 end-to-end tests in Chromium (desktop + Pixel 7)
-npm run screenshots  # regenerate docs/screenshots
+npm run test:e2e     # 66 end-to-end tests in Chromium (desktop + Pixel 7)
+npm run screenshots  # regenerate the README screenshots (English, plus the Japanese UI in docs/screenshots/ja)
 npm run test:visual:docker  # pixel comparison against the approved look (14 screenshots), in Docker
 ```
 

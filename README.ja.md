@@ -17,7 +17,7 @@ React · TypeScript · Vite · qr-code-styling · jsQR · Vitest · Playwright
 
 > この日本語版は英語版 README（2026 年 10 月時点）と同じ内容・構成で書かれています。内容に差がある場合は英語版が最新です。
 
-![Kehai QR Studio（ダークテーマ）](docs/screenshots/desktop-dark.png)
+![Kehai QR Studio（ダークテーマ）](docs/screenshots/ja/desktop-dark.png)
 
 ---
 
@@ -53,7 +53,7 @@ QR とジオフェンスを組み合わせた出席管理プラットフォー�
 | 7 | **読み取りやすさ：** 読み取れる状態を保ち、リスクのある設定を警告 | **ライブ読み取り検証**と**読み取りやすさの分析**（詳しくは後述）。 |
 | 8 | **最近のコード：** ローカルに保存し、再利用でき、再読み込み後も残る | 直近 12 件のコードを、サムネイルとエディターの全状態とともに `localStorage` に保存します。クリック 1 回で種類、入力内容、デザインを復元できます。重複はまとめ、大きすぎるロゴは保存せず、容量の上限に達した場合はエラーにせず古いものから削除します。 |
 | 9 | **レスポンシブ：** パソコンとスマートフォン | パソコンでは 2 カラム構成で、プレビューが追従します。プレビューが固定されるのは内容とデザインのパネルの横にある間だけで、「最近のコード」の手前で止まり、その下に潜り込むことはありません（作業用のパネルは独自のグリッド `.layout__main` を持っています）。スマートフォンでは 1 カラムになり、フォームのすぐ下にプレビューが表示されます。Pixel 7 のサイズと幅 360 px のスマートフォン（長いドメインのロゴがある場合を含む）で、横スクロールが発生しないことを確認しています。 |
-| 10 | **テスト：** 種類、カスタマイズ、ダウンロード、不正な入力、保存、レスポンシブ | **114 件のユニット／コンポーネントテスト**（Vitest）と、実際の Chromium で動かす **65 件の E2E テスト**（Playwright）。[テスト](#テスト)を参照してください。 |
+| 10 | **テスト：** 種類、カスタマイズ、ダウンロード、不正な入力、保存、レスポンシブ | **114 件のユニット／コンポーネントテスト**（Vitest）と、実際の Chromium で動かす **66 件の E2E テスト**（Playwright）。[テスト](#テスト)を参照してください。 |
 
 **任意の追加要件もすべて実装済み：** ✅ SVG でのダウンロード · ✅ 中央へのロゴ配置 · ✅ グラデーションのコード · ✅ 画像のクリップボードへのコピー（Chrome では直接、Samsung Internet では長押しの画像メニュー経由。後述） · ✅ モジュールと角の模様の変更 · ✅ ダーク／ライトテーマ
 
@@ -126,7 +126,7 @@ https://kehai-qr-studio.vercel.app/t/#UHJldHRpZXN0IHNvdWwhIDwz
 - **タイポグラフィ：** 日本語の文章にはシステムの日本語フォントを使います。同梱している Noto Sans JP は、透かしに使う太い漢字だけのサブセットです。字間を広げた大文字のラベルは本文のフォントに切り替え、見出しは文節の区切りで改行します（`word-break: auto-phrase`）。
 - **テスト：**
   - ユニットテストがソースコード中のすべての `t("…")` を走査し、日本語訳のない文字列、使われていない訳、プレースホルダーの食い違いがあれば失敗します。
-  - E2E テストで、言語の切り替え、翻訳されたエラーと読み取り状態の表示、日本語表示で作ったダウンロードのデコード、再読み込み後も選択が残ること、`ja-JP` のブラウザが日本語で始まること、日本語の UI が幅 360 px のスマートフォンからはみ出さないことを確認しています。
+  - E2E テストで、言語の切り替え、翻訳されたエラーと読み取り状態の表示、日本語表示で作ったダウンロードのデコード、再読み込み後も選択が残ること、`ja-JP` のブラウザが日本語で始まること、日本語の UI が幅 360 px のスマートフォンからはみ出さないこと、操作ボタン（ダウンロード · コピー · 保存）が 1 行に収まり英語表示と同じ高さであることを確認しています。ダウンロードはほかの 2 つの約 2 倍の幅があるため、日本語表示では広めの列を割り当てています。
 
 ### ダウンロード：画像かベクターか
 
@@ -163,7 +163,7 @@ https://kehai-qr-studio.vercel.app/t/#UHJldHRpZXN0IHNvdWwhIDwz
 
 リンクを貼り付けると、Studio がそのウェブサイトのロゴを探してコードの中央に配置します。追加の操作は必要ありません。
 
-<p align="center"><img src="docs/screenshots/site-logo.png" alt="ウェブサイトのロゴを自動で配置した URL のコード" width="340"> <img src="docs/screenshots/site-logo-controls.png" alt="ロゴの操作：ウェブサイトのロゴ、差し替え、削除、自動配置の切り替え" width="480"></p>
+<p align="center"><img src="docs/screenshots/ja/site-logo.png" alt="ウェブサイトのロゴを自動で配置した URL のコード" width="340"> <img src="docs/screenshots/ja/site-logo-controls.png" alt="ロゴの操作：ウェブサイトのロゴ、差し替え、削除、自動配置の切り替え" width="480"></p>
 
 **仕組み**（`src/lib/siteLogo.ts`、`src/hooks/useSiteLogo.ts`）：
 
@@ -237,7 +237,7 @@ https://kehai-qr-studio.vercel.app/t/#UHJldHRpZXN0IHNvdWwhIDwz
 | 装飾的なモジュール | 「ドット」「クラッシー」の模様をレベル L や M で使うと、Q か H を使うよう警告します。 |
 | 密度／容量超過 | 非常に密なコード（バージョン 15 以上）には警告を出します。どのバージョンにも収まらない長さの内容は、クラッシュさせずにその旨を伝えます。 |
 
-<p align="center"><img src="docs/screenshots/warnings.png" alt="読み取りやすさの警告" width="380"></p>
+<p align="center"><img src="docs/screenshots/ja/warnings.png" alt="読み取りやすさの警告" width="380"></p>
 
 ---
 
@@ -245,17 +245,17 @@ https://kehai-qr-studio.vercel.app/t/#UHJldHRpZXN0IHNvdWwhIDwz
 
 | ライトテーマ · Wi-Fi | ロゴ + グラデーション |
 |---|---|
-| ![Wi-Fi のコードを表示したライトテーマ](docs/screenshots/desktop-light-wifi.png) | ![ロゴとグラデーション](docs/screenshots/logo-gradient.png) |
+| ![Wi-Fi のコードを表示したライトテーマ](docs/screenshots/ja/desktop-light-wifi.png) | ![ロゴとグラデーション](docs/screenshots/ja/logo-gradient.png) |
 
 | デザインパネル | 入力の検証 |
 |---|---|
-| ![デザインパネル](docs/screenshots/design-panel.png) | ![入力エラー](docs/screenshots/validation.png) |
+| ![デザインパネル](docs/screenshots/ja/design-panel.png) | ![入力エラー](docs/screenshots/ja/validation.png) |
 
 | スマートフォン | スマートフォンのプレビュー |
 |---|---|
-| ![スマートフォン](docs/screenshots/mobile-top.png) | ![スマートフォンのプレビュー](docs/screenshots/mobile-preview.png) |
+| ![スマートフォン](docs/screenshots/ja/mobile-top.png) | ![スマートフォンのプレビュー](docs/screenshots/ja/mobile-preview.png) |
 
-![最近のコード](docs/screenshots/recent.png)
+![最近のコード](docs/screenshots/ja/recent.png)
 
 ---
 
@@ -345,8 +345,8 @@ Node 18 以上が必要です。
 
 ```bash
 npm test             # 114 件のユニット + コンポーネントテスト（Vitest、jsdom）
-npm run test:e2e     # Chromium での 65 件の E2E テスト（パソコン + Pixel 7）
-npm run screenshots  # docs/screenshots を再生成
+npm run test:e2e     # Chromium での 66 件の E2E テスト（パソコン + Pixel 7）
+npm run screenshots  # README 用のスクリーンショット（英語版と、日本語表示の docs/screenshots/ja）を再生成
 npm run test:visual:docker  # 承認済みの見た目とのピクセル比較（14 枚のスクリーンショット、Docker 内で実行）
 ```
 
